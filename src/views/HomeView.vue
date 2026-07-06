@@ -77,12 +77,13 @@
       function handleSubmit(){
         if (currentFrame.value > 0 && currentFrame.value < 10){
           if (currentRoll.value === 1){
+            frames.push({ frame: currentFrame.value, roll1: null, roll2: null, currentTotal: null })
             firstRoll = rollDropdown.value
             throws.value.push(firstRoll)
+            frames[currentFrame.value - 1].roll1 = firstRoll
             rollDropdown.value = ''
             if (firstRoll === 10){
-              frames.push({ frame: currentFrame.value, roll1: firstRoll, roll2: null})
-              calculateScore(firstRoll)
+              calculateScore(throws.value)
               firstRoll = null
               remainingPins.value = 10
               currentFrame.value++
@@ -90,13 +91,13 @@
             }
             remainingPins.value = computeSecondRoll()
             currentRoll.value++
-            calculateScore(firstRoll)
+            calculateScore(throws.value)
             return
           }
           else{
             throws.value.push(rollDropdown.value)
-            frames.push({ frame: currentFrame.value, roll1: firstRoll, roll2: rollDropdown.value})
-            calculateScore(rollDropdown.value)
+            frames[currentFrame.value - 1].roll2 = secondRoll
+            calculateScore(throws.value)
             rollDropdown.value = ''
             firstRoll = null
             currentRoll.value = 1
@@ -109,19 +110,21 @@
         else if (currentFrame.value === 10){
           var isStrikeOrSpare = false
           if (currentRoll.value === 1){
+            frames.push({ frame: currentFrame.value, roll1: null, roll2: null, roll3: null, currentTotal: null })
             firstRoll = rollDropdown.value
             throws.value.push(firstRoll)
+            frames[currentFrame.value - 1].roll1 = firstRoll
             rollDropdown.value = ''
             if (firstRoll === 10){
               isStrikeOrSpare = true
               remainingPins.value = 10
               currentRoll.value++
-              calculateScore(firstRoll)
+              calculateScore(throws.value)
               return
             }
             remainingPins.value = computeSecondRoll()
             currentRoll.value++
-            calculateScore(firstRoll)
+            calculateScore(throws.value)
             return
           }
           else if (currentRoll.value === 2){
@@ -132,58 +135,93 @@
               if (secondRoll === 10){
                 remainingPins.value = 10
                 currentRoll.value++
-                calculateScore(secondRoll)
+                calculateScore(throws.value)
                 return
               }
               remainingPins.value = computeThirdRoll()
               currentRoll.value++
-              calculateScore(secondRoll)
+              calculateScore(throws.value)
               return
             }
             if (secondRoll === remainingPins.value){
               isStrikeOrSpare = true
               currentRoll.value++
               remainingPins.value = 10
-              calculateScore(secondRoll)
+              calculateScore(throws.value)
               resetPins()
               return
             }
             else {
-              frames.push({ frame: currentFrame.value, roll1: firstRoll, roll2: secondRoll})
-              calculateScore(secondRoll)
+              frames[currentFrame.value - 1].roll2 = secondRoll
+              calculateScore(throws.value)
               newGame()
               return
             }
           }
           else if (currentRoll.value == 3){
             throws.value.push(rollDropdown.value)
-            frames.push({ frame: currentFrame.value, roll1: firstRoll, roll2: secondRoll, roll3: rollDropdown.value})
-            calculateScore(rollDropdown.value)
+            frames[currentFrame.value - 1].roll3 = rollDropdown.value
+            calculateScore(throws.value)
             rollDropdown.value = ''
             newGame()
             return
           }
         }
         else if (currentFrame.value > 10){
-          alert("Game Over, final score is " + total)
+          alert("Game Over, final score is " + total.value)
         }
       }
 
-      function calculateScore(newThrow){
-        var throwIter = 0
-        var frameIter = 1
+      function calculateScore(throwsArray){
+        var throwsIter = 0
+        var currentThrow = 1
+        var currentFrame = 1
         var totalPinsThisFrame = 0
-        while (frameIter <= 9){
-          
+        var currentTotal = 0
+        while (throwsIter < throwsArray.length){
+          var nextThrow = throwsArray[throwsIter]
+          if (currentThrow === 1 && nextThrow === 10 && currentFrame !== 10){
+            if (throwsIter + 2 >= throwsArray.length) {
+              total.value = currentTotal
+              return
+            }
+            totalPinsThisFrame += nextThrow
+            currentTotal += nextThrow
+            currentTotal += throwsArray[throwsIter + 1]
+            currentTotal += throwsArray[throwsIter + 2]
+            frames[currentFrame - 1].currentTotal = currentTotal
+            currentThrow++
+          }
+          else if (currentThrow === 2 && nextThrow === (10 - totalPinsThisFrame) && currentFrame !== 10){
+            if (throwsIter + 1 >= throwsArray.length) {
+              total.value = currentTotal
+              return
+            }
+            totalPinsThisFrame += nextThrow
+            currentTotal += nextThrow
+            currentTotal += throwsArray[throwsIter + 1]
+            frames[currentFrame - 1].currentTotal = currentTotal
+            currentThrow++
+          }
+          else{
+            totalPinsThisFrame += nextThrow
+            currentTotal += nextThrow
+            frames[currentFrame - 1].currentTotal = currentTotal
+            currentThrow++
+          }
+          if (((currentThrow > 2 || totalPinsThisFrame === 10) && currentFrame !== 10)){
+            currentThrow = 1
+            frames[currentFrame - 1].currentTotal = currentTotal
+            currentFrame++
+            totalPinsThisFrame = 0
+          }
+          throwsIter++
         }
-        if (frameIter === 10){
-
-        }
-        //Logic for displaying score should go here
+        total.value = currentTotal
       }
 
       function newGame(){
-        alert("Game Over")
+        alert("Game Over, final score is " + total.value)
         currentFrame.value = 1
         currentRoll.value = 1
         remainingPins.value = 10
@@ -191,7 +229,7 @@
         secondRoll = null
         throws.value.length = 0
         frames.legnth = 0
-        total = 0
+        total.value = 0
         resetPins()
       }
 
@@ -210,6 +248,7 @@
         rollDropdown,
         strikeOrSpare,
         remainingPins,
+        total,
         computeSecondRoll,
         computeThirdRoll,
         handleSubmit,
