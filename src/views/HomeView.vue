@@ -82,27 +82,27 @@
             rollDropdown.value = ''
             if (firstRoll === 10){
               frames.push({ frame: currentFrame.value, roll1: firstRoll, roll2: null})
+              calculateScore(firstRoll)
               firstRoll = null
               remainingPins.value = 10
               currentFrame.value++
-              calculateScore()
               return
             }
             remainingPins.value = computeSecondRoll()
             currentRoll.value++
-            calculateScore()
+            calculateScore(firstRoll)
             return
           }
           else{
             throws.value.push(rollDropdown.value)
             frames.push({ frame: currentFrame.value, roll1: firstRoll, roll2: rollDropdown.value})
+            calculateScore(rollDropdown.value)
             rollDropdown.value = ''
             firstRoll = null
             currentRoll.value = 1
             currentFrame.value++
             remainingPins.value = 10
             resetPins()
-            calculateScore()
             return
           }
         }
@@ -116,12 +116,12 @@
               isStrikeOrSpare = true
               remainingPins.value = 10
               currentRoll.value++
-              calculateScore()
+              calculateScore(firstRoll)
               return
             }
             remainingPins.value = computeSecondRoll()
             currentRoll.value++
-            calculateScore()
+            calculateScore(firstRoll)
             return
           }
           else if (currentRoll.value === 2){
@@ -132,25 +132,25 @@
               if (secondRoll === 10){
                 remainingPins.value = 10
                 currentRoll.value++
-                calculateScore()
+                calculateScore(secondRoll)
                 return
               }
               remainingPins.value = computeThirdRoll()
               currentRoll.value++
-              calculateScore()
+              calculateScore(secondRoll)
               return
             }
             if (secondRoll === remainingPins.value){
               isStrikeOrSpare = true
               currentRoll.value++
               remainingPins.value = 10
-              calculateScore()
+              calculateScore(secondRoll)
               resetPins()
               return
             }
             else {
               frames.push({ frame: currentFrame.value, roll1: firstRoll, roll2: secondRoll})
-              calculateScore()
+              calculateScore(secondRoll)
               newGame()
               return
             }
@@ -158,8 +158,8 @@
           else if (currentRoll.value == 3){
             throws.value.push(rollDropdown.value)
             frames.push({ frame: currentFrame.value, roll1: firstRoll, roll2: secondRoll, roll3: rollDropdown.value})
+            calculateScore(rollDropdown.value)
             rollDropdown.value = ''
-            calculateScore()
             newGame()
             return
           }
@@ -169,12 +169,11 @@
         }
       }
 
-      function calculateScore(){
+      function calculateScore(newThrow){
         var throwIter = 0
         var frameIter = 1
         var totalPinsThisFrame = 0
         while (frameIter <= 9){
-          
           
         }
         if (frameIter === 10){
