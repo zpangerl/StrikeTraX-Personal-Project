@@ -98,11 +98,12 @@
         if (currentFrame.value > 0 && currentFrame.value < 10){
           if (currentRoll.value === 1){
             firstRoll = rollDropdown.value
-            throws.push(firstRoll)
-            frames.value[currentFrame.value - 1].roll1 = firstRoll
-            rollDropdown.value = ''
+            addThrow(firstRoll, "roll1")
+            //throws.push(firstRoll)
+            //frames.value[currentFrame.value - 1].roll1 = firstRoll
+            //rollDropdown.value = ''
             if (firstRoll === 10){
-              calculateScore(throws)
+              //calculateScore(throws)
               firstRoll = null
               remainingPins.value = 10
               currentFrame.value++
@@ -110,14 +111,15 @@
             }
             remainingPins.value = computeSecondRoll()
             currentRoll.value++
-            calculateScore(throws)
+            //calculateScore(throws)
             return
           }
           else{
-            throws.push(rollDropdown.value)
-            frames.value[currentFrame.value - 1].roll2 = rollDropdown.value
-            calculateScore(throws)
-            rollDropdown.value = ''
+            addThrow(rollDropdown.value, "roll2")
+            //throws.push(rollDropdown.value)
+            //frames.value[currentFrame.value - 1].roll2 = rollDropdown.value
+            //calculateScore(throws)
+            //rollDropdown.value = ''
             firstRoll = null
             currentRoll.value = 1
             currentFrame.value++
@@ -129,57 +131,60 @@
         else if (currentFrame.value === 10){
           if (currentRoll.value === 1){
             firstRoll = rollDropdown.value
-            throws.push(firstRoll)
-            frames.value[currentFrame.value - 1].roll1 = firstRoll
-            rollDropdown.value = ''
+            addThrow(firstRoll, "roll1")
+            //throws.push(firstRoll)
+            //frames.value[currentFrame.value - 1].roll1 = firstRoll
+            //rollDropdown.value = ''
             if (firstRoll === 10){
               remainingPins.value = 10
               currentRoll.value++
-              calculateScore(throws)
+              //calculateScore(throws)
               return
             }
             remainingPins.value = computeSecondRoll()
             currentRoll.value++
-            calculateScore(throws)
+            //calculateScore(throws)
             return
           }
           else if (currentRoll.value === 2){
             secondRoll = rollDropdown.value
-            throws.push(secondRoll)
-            frames.value[currentFrame.value - 1].roll2 = secondRoll
-            rollDropdown.value = ''
+            addThrow(secondRoll, "roll2")
+            //throws.push(secondRoll)
+            //frames.value[currentFrame.value - 1].roll2 = secondRoll
+            //rollDropdown.value = ''
             if (firstRoll === 10){
               if (secondRoll === 10){
                 remainingPins.value = 10
                 currentRoll.value++
-                calculateScore(throws)
+                //calculateScore(throws)
                 return
               }
               remainingPins.value = computeThirdRoll()
               currentRoll.value++
-              calculateScore(throws)
+              //calculateScore(throws)
               return
             }
             if (secondRoll === remainingPins.value){
               currentRoll.value++
               remainingPins.value = 10
-              calculateScore(throws)
+              //calculateScore(throws)
               resetPins()
               return
             }
             else {
-              frames.value[currentFrame.value - 1].roll2 = secondRoll
-              calculateScore(throws)
+              //frames.value[currentFrame.value - 1].roll2 = secondRoll
+              //calculateScore(throws)
               //Variable for controlling end game state needs to replace
               isEndOfGame.value = true
               return
             }
           }
           else if (currentRoll.value == 3){
-            throws.push(rollDropdown.value)
-            frames.value[currentFrame.value - 1].roll3 = rollDropdown.value
-            calculateScore(throws)
-            rollDropdown.value = ''
+            addThrow(rollDropdown.value, "roll3")
+            //throws.push(rollDropdown.value)
+            //frames.value[currentFrame.value - 1].roll3 = rollDropdown.value
+            //calculateScore(throws)
+            //rollDropdown.value = ''
             //variable for controlling end game state needs to replace
             isEndOfGame.value = true
             return
@@ -199,7 +204,10 @@
       }
 
       function addThrow(newThrow, rollNum){
-
+        throws.push(newThrow)
+        frames.value[currentFrame.value - 1][rollNum] = newThrow
+        rollDropdown.value = ''
+        calculateScore(throws)
       }
 
       function calculateScore(throwsArray){
