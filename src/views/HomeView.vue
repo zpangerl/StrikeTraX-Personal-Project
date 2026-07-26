@@ -43,19 +43,23 @@
 
       var isEndOfGame = ref(false)
       var total = ref(0)
-      var currentFrame = ref(parseInt(localStorage.getItem('currentFrame')) || 1)
-      var currentRoll = ref(parseInt(localStorage.getItem('currentRoll')) || 1)
+      var currentFrame = ref(1)
+      var currentRoll = ref(1)
       var firstRoll = null
       var secondRoll = null
       var throws = []
       var frames = ref([])
       initializeFrames()
-      if (currentFrame.value < 1 || currentFrame.value > 10) newGame()
 
       const rollDropdown = ref('')
 
       var pins = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
       var remainingPins = ref(10)
+
+      if (localStorage.getItem('throws') !== null){
+        loadGame()
+      }
+      else if (currentFrame.value < 1 || currentFrame.value > 10) newGame()
 
       const strikeOrSpare = computed (() => {
         if (currentFrame.value !== 10 && currentRoll.value === 1) return 'X'
@@ -66,7 +70,6 @@
         else if (currentFrame.value === 10 && currentRoll.value === 3 && remainingPins.value === 10) return 'X'
         else if (currentFrame.value === 10 && currentRoll.value === 3 && remainingPins.value !== 10) return '/'
         else return 'error'
-        // handle roll 2 and 3 of frame 10 still
       })
 
       function computeSecondRoll(){
@@ -179,7 +182,7 @@
               return
             }
           }
-          else if (currentRoll.value == 3){
+          else if (currentRoll.value === 3){
             addThrow(rollDropdown.value, "roll3")
             //throws.push(rollDropdown.value)
             //frames.value[currentFrame.value - 1].roll3 = rollDropdown.value
@@ -207,6 +210,7 @@
         throws.push(newThrow)
         frames.value[currentFrame.value - 1][rollNum] = newThrow
         rollDropdown.value = ''
+        saveGame(throws)
         calculateScore(throws)
       }
 
@@ -258,6 +262,10 @@
         total.value = currentTotal
       }
 
+      function saveGame(throwsArray){
+        localStorage.setItem('throws', throwsArray)
+      }
+
       function newGame(){
         alert("Game Over, final score is " + frames.value[frames.value.length - 1].currentTotal)
         currentFrame.value = 1
@@ -267,6 +275,8 @@
         secondRoll = null
         throws.length = 0
         frames.value.length = 0
+        // make sure game is saved before doing what's below
+        localStorage.removeItem('throws')
         initializeFrames()
         total.value = 0
         resetPins()
@@ -278,6 +288,132 @@
           frames.value.push({ frame: i + 1, roll1: null, roll2: null, currentTotal: null })
         }
         frames.value.push({ frame: 10, roll1: null, roll2: null, roll3: null, currentTotal: null })
+      }
+
+      function loadGame(){
+        if (localStorage.getItem('throws') !== null){
+          // load, parse, and validate throws array
+          throws = JSON.parse(localStorage.getItem('throws'))
+          currentFrame.value = 1
+          currentRoll.value = 1
+          var throwsIter = 0
+          var firstRollLoad = 0
+          var secondRollLoad = 0
+          var thirdRollLoad = 0
+          var remainingPinsLoad = 10
+          while (throwsIter < throws.length){
+            if (currentFrame.value > 0 && currentFrame.value < 10){
+              if (currentRoll.value === 1){
+                firstRollLoad = throws[throwsIter]
+                if (!validateThrow(firstRollLoad, remainingPinsLoad)){
+                  newGame()
+                  return
+                }
+                throwsIter++
+                frames.value[currentFrame.value - 1]['roll1'] = firstRollLoad
+                if (firstRollLoad === 10){
+                  //handle strike
+                  currentFrame.value++
+                  firstRollLoad = 10
+                  continue
+                }
+                else {
+                  remainingPinsLoad = 10 - firstRollLoad
+                  currentRoll.value++
+                }
+              }
+              else {
+                secondRollLoad = throws[throwsIter]
+                if (!validateThrow(secondRollLoad, remainingPinsLoad)){
+                  newGame()
+                  return
+                }
+                throwsIter++
+                frames.value[currentFrame.value - 1]['roll2'] = secondRollLoad
+                firstRollLoad = null
+                currentRoll.value = 1
+                currentFrame.value++
+                remainingPinsLoad = 10
+              }
+            }
+            else if (currentFrame.value === 10){
+              if (currentRoll.value === 1){
+                firstRollLoad = throws[throwsIter]
+                if (!validateThrow(firstRollLoad, remainingPinsLoad)){
+                  newGame()
+                  return
+                }
+                throwsIter++
+                frames.value[currentFrame.value - 1].roll1 = firstRollLoad
+                currentRoll.value++
+                if (firstRollLoad !== 10){
+                  remainingPinsLoad = 10 - firstRollLoad
+                }
+                else remainingPinsLoad = 10
+                continue
+              }
+              else if (currentRoll.value === 2){
+                secondRollLoad = throws[throwsIter]
+                if (!validateThrow(secondRollLoad, remainingPinsLoad)){
+                  newGame()
+                  return
+                }
+                throwsIter++
+                frames.value[currentFrame.value - 1].roll2 = secondRollLoad
+                if (firstRollLoad === 10){
+                  if (secondRollLoad === 10){
+                    currentRoll.value++
+                    continue
+                  }
+                  remainingPinsLoad = remainingPinsLoad - secondRollLoad
+                  currentRoll.value++
+                  continue
+                }
+                if (secondRollLoad === remainingPinsLoad){
+                  currentRoll.value++
+                  remainingPinsLoad = 10
+                  continue
+                }
+                else{
+                  if (throwsIter !== throws.length){
+                    newGame()
+                    return
+                  }
+                  isEndOfGame.value = true
+                  break
+                }
+              }
+              else if (currentRoll.value === 3){
+                thirdRollLoad = throws[throwsIter]
+                throwsIter++
+                if (!validateThrow(thirdRollLoad, remainingPinsLoad)){
+                  newGame()
+                  return
+                }
+                frames.value[currentFrame.value - 1].roll3 = thirdRollLoad
+                if (throwsIter !== throws.length){
+                  newGame()
+                  return
+                }
+                isEndOfGame.value = true
+                break
+              }
+            }
+          }
+          remainingPins.value = remainingPinsLoad
+          pins.value.length = 0
+          for (let i = 1; i <= remainingPins.value; i++){
+            pins.value.push(i)
+          }
+          calculateScores(throws)
+        }
+      }
+
+      function validateThrow(throwVal, pinsVal){
+        if (throwVal >= 0 && throwVal <= pinsVal){
+          return true
+        }
+        else return false
       }
 
       return {
@@ -300,6 +436,8 @@
         handleSubmit,
         newGame,
         initializeFrames,
+        loadGame,
+        validateThrow,
       }
     }
   }
