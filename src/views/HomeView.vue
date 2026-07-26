@@ -56,7 +56,9 @@
       var pins = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
       var remainingPins = ref(10)
 
-      if (localStorage.getItem('throws') !== null){
+      const loadThrows = localStorage.getItem('throws')
+
+      if (loadThrows !== null){
         loadGame()
       }
       else if (currentFrame.value < 1 || currentFrame.value > 10) newGame()
@@ -263,7 +265,7 @@
       }
 
       function saveGame(throwsArray){
-        localStorage.setItem('throws', throwsArray)
+        localStorage.setItem('throws', JSON.stringify(throwsArray))
       }
 
       function newGame(){
@@ -297,9 +299,9 @@
           currentFrame.value = 1
           currentRoll.value = 1
           var throwsIter = 0
-          var firstRollLoad = 0
-          var secondRollLoad = 0
-          var thirdRollLoad = 0
+          var firstRollLoad = null
+          var secondRollLoad = null
+          var thirdRollLoad = null
           var remainingPinsLoad = 10
           while (throwsIter < throws.length){
             if (currentFrame.value > 0 && currentFrame.value < 10){
@@ -314,7 +316,6 @@
                 if (firstRollLoad === 10){
                   //handle strike
                   currentFrame.value++
-                  firstRollLoad = 10
                   continue
                 }
                 else {
@@ -349,7 +350,9 @@
                 if (firstRollLoad !== 10){
                   remainingPinsLoad = 10 - firstRollLoad
                 }
-                else remainingPinsLoad = 10
+                else {
+                  remainingPinsLoad = 10
+                }
                 continue
               }
               else if (currentRoll.value === 2){
@@ -405,7 +408,9 @@
           for (let i = 1; i <= remainingPins.value; i++){
             pins.value.push(i)
           }
-          calculateScores(throws)
+          firstRoll = firstRollLoad
+          secondRoll = secondRollLoad
+          calculateScore(throws)
         }
       }
 
