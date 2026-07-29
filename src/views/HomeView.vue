@@ -30,6 +30,9 @@
     </div>
   </div>
   <div class="d-flex justify-content-center">
+    <p v-if="isEndOfGame">Total Score: {{ total }}</p>
+  </div>
+  <div class="d-flex justify-content-center">
     <button @click="newGame" v-if="isEndOfGame">Reset Without Saving</button>
     <!--Need to add a new function for the button below that logs the game in localStorage for now, DB later, and then resets-->
     <button @click="newGame" v-if="isEndOfGame">Log Game</button>
@@ -49,7 +52,7 @@
       var secondRoll = null
       var throws = []
       var frames = ref([])
-      initializeFrames()
+      frames.value = initializeFrames()
 
       const rollDropdown = ref('')
 
@@ -103,7 +106,7 @@
         if (currentFrame.value > 0 && currentFrame.value < 10){
           if (currentRoll.value === 1){
             firstRoll = rollDropdown.value
-            addThrow(firstRoll, "roll1")
+            addThrow(firstRoll)
             if (firstRoll === 10){
               firstRoll = null
               remainingPins.value = 10
@@ -115,7 +118,7 @@
             return
           }
           else{
-            addThrow(rollDropdown.value, "roll2")
+            addThrow(rollDropdown.value)
             firstRoll = null
             currentRoll.value = 1
             currentFrame.value++
@@ -127,7 +130,7 @@
         else if (currentFrame.value === 10){
           if (currentRoll.value === 1){
             firstRoll = rollDropdown.value
-            addThrow(firstRoll, "roll1")
+            addThrow(firstRoll)
             if (firstRoll === 10){
               remainingPins.value = 10
               currentRoll.value++
@@ -139,7 +142,7 @@
           }
           else if (currentRoll.value === 2){
             secondRoll = rollDropdown.value
-            addThrow(secondRoll, "roll2")
+            addThrow(secondRoll)
             if (firstRoll === 10){
               if (secondRoll === 10){
                 remainingPins.value = 10
@@ -162,7 +165,7 @@
             }
           }
           else if (currentRoll.value === 3){
-            addThrow(rollDropdown.value, "roll3")
+            addThrow(rollDropdown.value)
             isEndOfGame.value = true
             return
           }
@@ -171,7 +174,7 @@
 
       function displayRoll(frame, rollNum){
         const roll = frame[`roll${rollNum}`]
-        if (roll === undefined) return ''
+        if (roll === null) return ''
 
         if (roll === 10) return 'X'
         else if (frame.frame === 10 && roll === 10) return 'X'
@@ -180,12 +183,20 @@
         else return roll
       }
 
-      function addThrow(newThrow, rollNum){
+      function addThrow(newThrow){
         throws.push(newThrow)
-        frames.value[currentFrame.value - 1][rollNum] = newThrow
         rollDropdown.value = ''
-        saveGame(throws)
-        calculateScore(throws)
+        savePartialGame(throws)
+        const scoreJSON = calculateScore(throws)
+        if (!scoreJSON.isValid || scoreJSON.frames === null || scoreJSON.total === null){
+          // for now, will update later to actually resolve back to previous throw/frame/whatever if invalid
+          newGame()
+          return
+        }
+        else {
+          frames.value = scoreJSON.frames
+          total.value = scoreJSON.total
+        }
       }
 
       function calculateScore(throwsArray){
@@ -194,54 +205,133 @@
         var currentFrame = 1
         var totalPinsThisFrame = 0
         var currentTotal = 0
+        let gameFrames = initializeFrames()
+        const returnJSON = {
+          frames: null,
+          isValid: true,
+          currThrow: 1,
+          currFrame: 1,
+          pinsLeft: 10,
+          total: null
+        }
+
         while (throwsIter < throwsArray.length){
           var nextThrow = throwsArray[throwsIter]
+          if (typeof nextThrow !== 'number' || nextThrow < 0 || nextThrow > (10 - totalPinsThisFrame)){
+            returnJSON.isValid = false
+            return returnJSON
+          }
           if (currentThrow === 1 && nextThrow === 10 && currentFrame !== 10){
             if (throwsIter + 2 >= throwsArray.length) {
-              total.value = currentTotal
-              return
+              if (throwsArray[throwsIter + 1] !== undefined){
+                gameFrames[currentFrame].roll1 = throwsArray[throwsIter + 1]
+              }
+              gameFrames[currentFrame - 1].roll1 = nextThrow
+              returnJSON.frames = gameFrames
+              returnJSON.currThrow = currentThrow
+              returnJSON.currFrame = currentFrame
+              returnJSON.pinsLeft = 10 - totalPinsThisFrame
+              returnJSON.total = currentTotal
+              return returnJSON
             }
             totalPinsThisFrame += nextThrow
             currentTotal += nextThrow
             currentTotal += throwsArray[throwsIter + 1]
             currentTotal += throwsArray[throwsIter + 2]
-            frames.value[currentFrame - 1].currentTotal = currentTotal
+            gameFrames[currentFrame - 1].roll1 = nextThrow
+            gameFrames[currentFrame - 1].currentTotal = currentTotal
             currentThrow++
           }
           else if (currentThrow === 2 && nextThrow === (10 - totalPinsThisFrame) && currentFrame !== 10){
             if (throwsIter + 1 >= throwsArray.length) {
-              total.value = currentTotal
-              return
+              gameFrames[currentFrame - 1].roll2 = nextThrow
+              gameFrames[currentFrame - 1].currentTotal = null
+              returnJSON.frames = gameFrames
+              returnJSON.currThrow = currentThrow
+              returnJSON.currFrame = currentFrame
+              returnJSON.pinsLeft = 10 - totalPinsThisFrame
+              returnJSON.total = currentTotal
+              return returnJSON
             }
             totalPinsThisFrame += nextThrow
             currentTotal += nextThrow
             currentTotal += throwsArray[throwsIter + 1]
-            frames.value[currentFrame - 1].currentTotal = currentTotal
+            gameFrames[currentFrame - 1].roll2 = nextThrow
+            gameFrames[currentFrame - 1].currentTotal = currentTotal
+            currentThrow++
+          }
+          else if (currentFrame === 10){
+            if (currentThrow === 1){
+              if (nextThrow !== 10){
+                totalPinsThisFrame += nextThrow
+              }
+              else totalPinsThisFrame = 0
+            }
+            else if (currentThrow === 2){
+              if (gameFrames[currentFrame - 1].roll1 === 10){
+                if (nextThrow === 10){
+                  totalPinsThisFrame = 0
+                }
+                else {
+                  totalPinsThisFrame += nextThrow
+                }
+              }
+              else{
+                if (nextThrow === (10 - totalPinsThisFrame)){
+                  totalPinsThisFrame = 0
+                }
+                else{
+                  totalPinsThisFrame = 10
+                  currentTotal += nextThrow
+                  gameFrames[currentFrame - 1].roll2 = nextThrow
+                  gameFrames[currentFrame - 1].currentTotal = currentTotal
+                  currentThrow++
+                  break
+                }
+              }
+            }
+            else if (currentThrow === 3){
+              currentTotal += nextThrow
+              gameFrames[currentFrame - 1].roll3 = nextThrow
+              gameFrames[currentFrame - 1].currentTotal = currentTotal
+              currentThrow++
+              break
+            }
+            currentTotal += nextThrow
+            gameFrames[currentFrame - 1][`roll${currentThrow}`] = nextThrow
+            gameFrames[currentFrame - 1].currentTotal = currentTotal
             currentThrow++
           }
           else{
             totalPinsThisFrame += nextThrow
             currentTotal += nextThrow
-            frames.value[currentFrame - 1].currentTotal = currentTotal
+            gameFrames[currentFrame - 1][`roll${currentThrow}`] = nextThrow
+            if (currentThrow != 1){
+              gameFrames[currentFrame - 1].currentTotal = currentTotal
+            }
             currentThrow++
           }
           if (((currentThrow > 2 || totalPinsThisFrame === 10) && currentFrame !== 10)){
             currentThrow = 1
-            frames.value[currentFrame - 1].currentTotal = currentTotal
+            gameFrames[currentFrame - 1].currentTotal = currentTotal
             currentFrame++
             totalPinsThisFrame = 0
           }
           throwsIter++
         }
-        total.value = currentTotal
+        returnJSON.total = currentTotal
+        returnJSON.currThrow = currentThrow
+        returnJSON.currFrame = currentFrame
+        returnJSON.pinsLeft = 10 - totalPinsThisFrame
+        returnJSON.frames = gameFrames
+        return returnJSON
       }
 
-      function saveGame(throwsArray){
+      function savePartialGame(throwsArray){
         localStorage.setItem('throws', JSON.stringify(throwsArray))
       }
 
       function newGame(){
-        alert("Game Over, final score is " + frames.value[frames.value.length - 1].currentTotal)
         currentFrame.value = 1
         currentRoll.value = 1
         remainingPins.value = 10
@@ -251,23 +341,31 @@
         frames.value.length = 0
         // make sure game is saved before doing what's below
         localStorage.removeItem('throws')
-        initializeFrames()
+        frames.value = initializeFrames()
         total.value = 0
         resetPins()
         isEndOfGame.value = false
       }
 
       function initializeFrames(){
+        let framesArr = []
         for (var i = 0; i < 9; i++){
-          frames.value.push({ frame: i + 1, roll1: null, roll2: null, currentTotal: null })
+          framesArr.push({ frame: i + 1, roll1: null, roll2: null, currentTotal: null })
         }
-        frames.value.push({ frame: 10, roll1: null, roll2: null, roll3: null, currentTotal: null })
+        framesArr.push({ frame: 10, roll1: null, roll2: null, roll3: null, currentTotal: null })
+        return framesArr
       }
 
       function loadGame(){
         if (localStorage.getItem('throws') !== null){
           // load, parse, and validate throws array
+          try{
           throws = JSON.parse(localStorage.getItem('throws'))
+          } catch (error){
+            newGame()
+            alert("Invalid save data, starting new game")
+            return
+          }
           currentFrame.value = 1
           currentRoll.value = 1
           var throwsIter = 0
@@ -284,7 +382,7 @@
                   return
                 }
                 throwsIter++
-                frames.value[currentFrame.value - 1]['roll1'] = firstRollLoad
+                //frames.value[currentFrame.value - 1]['roll1'] = firstRollLoad
                 if (firstRollLoad === 10){
                   //handle strike
                   currentFrame.value++
@@ -302,7 +400,7 @@
                   return
                 }
                 throwsIter++
-                frames.value[currentFrame.value - 1]['roll2'] = secondRollLoad
+                //frames.value[currentFrame.value - 1]['roll2'] = secondRollLoad
                 firstRollLoad = null
                 currentRoll.value = 1
                 currentFrame.value++
@@ -317,7 +415,7 @@
                   return
                 }
                 throwsIter++
-                frames.value[currentFrame.value - 1].roll1 = firstRollLoad
+                //frames.value[currentFrame.value - 1].roll1 = firstRollLoad
                 currentRoll.value++
                 if (firstRollLoad !== 10){
                   remainingPinsLoad = 10 - firstRollLoad
@@ -334,7 +432,7 @@
                   return
                 }
                 throwsIter++
-                frames.value[currentFrame.value - 1].roll2 = secondRollLoad
+                //frames.value[currentFrame.value - 1].roll2 = secondRollLoad
                 if (firstRollLoad === 10){
                   if (secondRollLoad === 10){
                     currentRoll.value++
@@ -365,7 +463,7 @@
                   newGame()
                   return
                 }
-                frames.value[currentFrame.value - 1].roll3 = thirdRollLoad
+                //frames.value[currentFrame.value - 1].roll3 = thirdRollLoad
                 if (throwsIter !== throws.length){
                   newGame()
                   return
@@ -382,7 +480,16 @@
           }
           firstRoll = firstRollLoad
           secondRoll = secondRollLoad
-          calculateScore(throws)
+          const scoreJSON = calculateScore(throws)
+          if (!scoreJSON.isValid || scoreJSON.frames === null){
+          // for now, will update later to actually resolve back to previous throw/frame/whatever if invalid
+            newGame()
+            return
+          }
+          else {
+            frames.value = scoreJSON.frames
+            total.value = scoreJSON.total
+          }
         }
       }
 
@@ -413,6 +520,7 @@
         handleSubmit,
         newGame,
         initializeFrames,
+        savePartialGame,
         loadGame,
         validateThrow,
       }
