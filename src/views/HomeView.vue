@@ -40,7 +40,7 @@
 </template>
 
 <script>
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed } from 'vue'
   import { displayRoll, calculateScore, initializeFrames, validateThrow } from '../utils/scoring'
   export default {
     setup(){
@@ -104,10 +104,12 @@
       }
 
       function handleSubmit(){
+        let throwAdded = true
         if (currentFrame.value > 0 && currentFrame.value < 10){
           if (currentRoll.value === 1){
             firstRoll = rollDropdown.value
-            addThrow(firstRoll)
+            throwAdded = addThrow(firstRoll)
+            if (!throwAdded) return
             if (firstRoll === 10){
               firstRoll = null
               remainingPins.value = 10
@@ -119,7 +121,8 @@
             return
           }
           else{
-            addThrow(rollDropdown.value)
+            throwAdded = addThrow(rollDropdown.value)
+            if (!throwAdded) return
             firstRoll = null
             currentRoll.value = 1
             currentFrame.value++
@@ -131,7 +134,8 @@
         else if (currentFrame.value === 10){
           if (currentRoll.value === 1){
             firstRoll = rollDropdown.value
-            addThrow(firstRoll)
+            throwAdded = addThrow(firstRoll)
+            if (!throwAdded) return
             if (firstRoll === 10){
               remainingPins.value = 10
               currentRoll.value++
@@ -143,7 +147,8 @@
           }
           else if (currentRoll.value === 2){
             secondRoll = rollDropdown.value
-            addThrow(secondRoll)
+            throwAdded = addThrow(secondRoll)
+            if (!throwAdded) return
             if (firstRoll === 10){
               if (secondRoll === 10){
                 remainingPins.value = 10
@@ -166,7 +171,8 @@
             }
           }
           else if (currentRoll.value === 3){
-            addThrow(rollDropdown.value)
+            throwAdded = addThrow(rollDropdown.value)
+            if (!throwAdded) return
             isEndOfGame.value = true
             return
           }
@@ -181,11 +187,12 @@
         if (!scoreJSON.isValid || scoreJSON.frames === null || scoreJSON.total === null){
           // for now, will update later to actually resolve back to previous throw/frame/whatever if invalid
           newGame()
-          return
+          return false
         }
         else {
           frames.value = scoreJSON.frames
           total.value = scoreJSON.total
+          return true
         }
       }
 
@@ -355,6 +362,7 @@
         total,
         handleSubmit,
         displayRoll,
+        newGame
       }
     }
   }
