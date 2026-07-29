@@ -339,7 +339,6 @@
         secondRoll = null
         throws.length = 0
         frames.value.length = 0
-        // make sure game is saved before doing what's below
         localStorage.removeItem('throws')
         frames.value = initializeFrames()
         total.value = 0
@@ -382,7 +381,6 @@
                   return
                 }
                 throwsIter++
-                //frames.value[currentFrame.value - 1]['roll1'] = firstRollLoad
                 if (firstRollLoad === 10){
                   //handle strike
                   currentFrame.value++
@@ -400,7 +398,6 @@
                   return
                 }
                 throwsIter++
-                //frames.value[currentFrame.value - 1]['roll2'] = secondRollLoad
                 firstRollLoad = null
                 currentRoll.value = 1
                 currentFrame.value++
@@ -415,7 +412,6 @@
                   return
                 }
                 throwsIter++
-                //frames.value[currentFrame.value - 1].roll1 = firstRollLoad
                 currentRoll.value++
                 if (firstRollLoad !== 10){
                   remainingPinsLoad = 10 - firstRollLoad
@@ -432,7 +428,6 @@
                   return
                 }
                 throwsIter++
-                //frames.value[currentFrame.value - 1].roll2 = secondRollLoad
                 if (firstRollLoad === 10){
                   if (secondRollLoad === 10){
                     currentRoll.value++
@@ -463,7 +458,6 @@
                   newGame()
                   return
                 }
-                //frames.value[currentFrame.value - 1].roll3 = thirdRollLoad
                 if (throwsIter !== throws.length){
                   newGame()
                   return
