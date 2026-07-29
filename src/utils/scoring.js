@@ -9,12 +9,12 @@ export function displayRoll(frame, rollNum){
 }
 
 export function calculateScore(throwsArray){
-    var throwsIter = 0
-    var currentThrow = 1
-    var currentFrame = 1
-    var totalPinsThisFrame = 0
-    var currentTotal = 0
-    let gameFrames = initializeFrames()
+    let throwsIter = 0
+    let currentThrow = 1
+    let currentFrame = 1
+    let totalPinsThisFrame = 0
+    let currentTotal = 0
+    const gameFrames = initializeFrames()
     const returnJSON = {
       frames: null,
       isValid: true,
@@ -25,15 +25,11 @@ export function calculateScore(throwsArray){
     }
 
     while (throwsIter < throwsArray.length){
-      var nextThrow = throwsArray[throwsIter]
+      const nextThrow = throwsArray[throwsIter]
       if (!validateThrow(nextThrow, 10 - totalPinsThisFrame)){
         returnJSON.isValid = false
         return returnJSON
       }
-      //if (typeof nextThrow !== 'number' || nextThrow < 0 || nextThrow > (10 - totalPinsThisFrame)){
-      //  returnJSON.isValid = false
-      //  return returnJSON
-      //}
       if (currentThrow === 1 && nextThrow === 10 && currentFrame !== 10){
         if (throwsIter + 2 >= throwsArray.length) {
           if (throwsArray[throwsIter + 1] !== undefined){
@@ -141,8 +137,8 @@ export function calculateScore(throwsArray){
 }
 
 export function initializeFrames(){
-    let framesArr = []
-    for (var i = 0; i < 9; i++){
+    const framesArr = []
+    for (let i = 0; i < 9; i++){
       framesArr.push({ frame: i + 1, roll1: null, roll2: null, currentTotal: null })
     }
     framesArr.push({ frame: 10, roll1: null, roll2: null, roll3: null, currentTotal: null })
@@ -154,8 +150,4 @@ export function validateThrow(throwVal, pinsVal){
         return false
       }
       else return true
-      if (throwVal >= 0 && throwVal <= pinsVal){
-        return true
-      }
-      else return false
 }

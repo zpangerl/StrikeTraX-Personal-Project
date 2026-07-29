@@ -45,20 +45,20 @@
   export default {
     setup(){
 
-      var isEndOfGame = ref(false)
-      var total = ref(0)
-      var currentFrame = ref(1)
-      var currentRoll = ref(1)
-      var firstRoll = null
-      var secondRoll = null
-      var throws = []
-      var frames = ref([])
+      const isEndOfGame = ref(false)
+      const total = ref(0)
+      const currentFrame = ref(1)
+      const currentRoll = ref(1)
+      let firstRoll = null
+      let secondRoll = null
+      let throws = []
+      const frames = ref([])
       frames.value = initializeFrames()
 
       const rollDropdown = ref('')
 
-      var pins = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-      var remainingPins = ref(10)
+      const pins = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+      const remainingPins = ref(10)
 
       const loadThrows = localStorage.getItem('throws')
 
@@ -227,11 +227,11 @@
           }
           currentFrame.value = 1
           currentRoll.value = 1
-          var throwsIter = 0
-          var firstRollLoad = null
-          var secondRollLoad = null
-          var thirdRollLoad = null
-          var remainingPinsLoad = 10
+          let throwsIter = 0
+          let firstRollLoad = null
+          let secondRollLoad = null
+          let thirdRollLoad = null
+          let remainingPinsLoad = 10
           while (throwsIter < throws.length){
             if (currentFrame.value > 0 && currentFrame.value < 10){
               if (currentRoll.value === 1){
