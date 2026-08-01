@@ -1,7 +1,6 @@
 <template>
   <div class="text-center mt-3 pt-4">
     <h1 class="display-1" style="color: red;"><strong>Bowling Score Tracker</strong></h1>
-    <p style="color: red">Landing Page</p>
   </div>
   <div class="d-flex justify-content-center">
     <div>
@@ -24,7 +23,7 @@
             <div class="roll-box">{{ displayRoll(frame, 2) }}</div>
             <div class="roll-box" v-if="frame.roll3 !== undefined">{{ displayRoll(frame, 3) }}</div>
           </div>
-        <div class="frame-total">{{ frame.currentTotal }}</div>
+          <div class="frame-total">{{ frame.currentTotal }}</div>
         </div>
       </div>
     </div>
@@ -35,7 +34,7 @@
   <div class="d-flex justify-content-center">
     <button @click="newGame" v-if="isEndOfGame">Reset Without Saving</button>
     <!--Need to add a new function for the button below that logs the game in localStorage for now, DB later, and then resets-->
-    <button @click="newGame" v-if="isEndOfGame">Log Game</button>
+    <button @click="saveGame" v-if="isEndOfGame">Log Game</button>
   </div>
 </template>
 
@@ -215,6 +214,27 @@
         isEndOfGame.value = false
       }
 
+      function saveGame(){
+        const savedGames = JSON.parse(localStorage.getItem('completeGames'))
+        const currDate = new Date().toISOString()
+        let storeGames = []
+        const newSave = {
+          date: currDate,
+          throws: null
+        }
+        if (savedGames === null){
+          newSave.throws = throws
+          storeGames.push(newSave)
+          localStorage.setItem('completeGames', JSON.stringify(storeGames))
+        }
+        else {
+          newSave.throws = throws
+          savedGames.push(newSave)
+          localStorage.setItem('completeGames', JSON.stringify(savedGames))
+        }
+        newGame()
+      }
+
       function loadGame(){
         if (localStorage.getItem('throws') !== null){
           // load, parse, and validate throws array
@@ -362,7 +382,8 @@
         total,
         handleSubmit,
         displayRoll,
-        newGame
+        newGame,
+        saveGame
       }
     }
   }
