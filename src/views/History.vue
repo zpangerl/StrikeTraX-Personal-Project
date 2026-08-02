@@ -35,12 +35,11 @@
     export default {
         setup(){
             const invalidGames = ref([])
-            const hasGameData = ref(true)
+            const hasGameData = ref(false)
 
             const gameHistory = computed (() => {
                 const savedGames = parseSavedGames()
-                if (savedGames === null || savedGames === undefined) {
-                    hasGameData.value = false
+                if (!savedGames) {
                     return
                 }
                 const savedFrames = []
@@ -50,7 +49,7 @@
                         continue
                     }
                     const calculateResult = calculateScore(savedGames[i].throws)
-                    if (calculateResult.isValid === false){
+                    if (!calculateResult.isValid){
                         invalidGames.value.push(i)
                         continue
                     }
@@ -60,6 +59,7 @@
                     }
                     savedFrames.push(preparedGame)
                 }
+                if (savedFrames.length > 0) hasGameData.value = true
                 return savedFrames
             })
 
@@ -79,7 +79,6 @@
                     return JSON.parse(localStorage.getItem('completeGames'))
                 } catch (error){
                     alert("Saved games corrupted, could not load")
-                    hasGameData.value = false
                     return null
                 }
             }
