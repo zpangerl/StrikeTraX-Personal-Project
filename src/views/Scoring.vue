@@ -215,7 +215,14 @@
       }
 
       function saveGame(){
-        const savedGames = JSON.parse(localStorage.getItem('completeGames'))
+        let savedGames = null
+        try {
+          savedGames = JSON.parse(localStorage.getItem('completeGames'))
+        } catch (error){
+          alert("Corrupted game data, game could not be saved")
+          newGame()
+          return
+        }
         const currDate = new Date().toISOString()
         let storeGames = []
         const newSave = {

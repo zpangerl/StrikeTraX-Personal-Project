@@ -2,6 +2,13 @@
     <div class="text-center mt-3 pt-4">
         <h1 class="display-1" style="color: black"><strong>Game History</strong></h1>
     </div>
+    <div class="d-flex justify-content-center" v-if="!hasGameData">
+        <h4 class="display-4" style="color: black">No games to display!</h4>
+    </div>
+    <div class="d-flex justify-content-center" v-if="invalidGames.length !== 0">
+        <h4 class="display-4" style="color: black">{{ invalidGames.length }} games could not be loaded due to invalid data</h4>
+        <button @click="removeInvalidGames">Remove Invalid Games</button>
+    </div>
     <div class="d-flex align-items-center flex-column">
         <div v-for="(game, i) in gameHistory" :key="i">
             <h3 class="display-1" style="color: black">Game {{ i + 1 }}: {{ new Date(game.date).toLocaleString() }}</h3>
@@ -24,22 +31,27 @@
 
 <script>
     import { ref, computed } from 'vue'
-    import { displayRoll, calculateScore, initializeFrames, validateThrow } from '../utils/scoring.js'
+    import { displayRoll, calculateScore} from '../utils/scoring.js'
     export default {
         setup(){
-            const invalidGames = []
+            const invalidGames = ref([])
+            const hasGameData = ref(true)
 
             const gameHistory = computed (() => {
-                const savedGames = JSON.parse(localStorage.getItem('completeGames'))
-                if (savedGames === null) {
-                    alert("No saved games!")
+                const savedGames = parseSavedGames()
+                if (savedGames === null || savedGames === undefined) {
+                    hasGameData.value = false
                     return
                 }
                 const savedFrames = []
                 for (let i = savedGames.length - 1; i >= 0; i--){
+                    if (!savedGames[i] || !Array.isArray(savedGames[i].throws) || savedGames[i].throws.length === 0){
+                        invalidGames.value.push(i)
+                        continue
+                    }
                     const calculateResult = calculateScore(savedGames[i].throws)
                     if (calculateResult.isValid === false){
-                        invalidGames.push(i)
+                        invalidGames.value.push(i)
                         continue
                     }
                     const preparedGame = {
@@ -50,10 +62,33 @@
                 }
                 return savedFrames
             })
+
+            function removeInvalidGames(){
+                const savedGames = parseSavedGames()
+                if (!savedGames){
+                    alert("Corrupted data, could not remove invalid games")
+                    return
+                }
+                const cleanedGames = savedGames.filter((game, i) => !invalidGames.value.includes(i))
+                localStorage.setItem('completeGames', JSON.stringify(cleanedGames))
+                invalidGames.value.length = 0
+            }
+
+            function parseSavedGames(){
+                try {
+                    return JSON.parse(localStorage.getItem('completeGames'))
+                } catch (error){
+                    alert("Saved games corrupted, could not load")
+                    hasGameData.value = false
+                    return null
+                }
+            }
             return {
+                hasGameData,
                 gameHistory,
                 invalidGames,
                 displayRoll,
+                removeInvalidGames
             }
         }
     }
