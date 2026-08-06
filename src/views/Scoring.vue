@@ -1,16 +1,16 @@
 <template>
   <div class="text-center mt-3 pt-4">
-    <h1 class="display-1" style="color: red;"><strong>Bowling Score Tracker</strong></h1>
+    <h1 class="display-5"><strong>Log Game</strong></h1>
   </div>
   <div class="d-flex justify-content-center">
     <div>
       <p>Frame: {{ currentFrame }}</p>
       <p>Roll: {{ currentRoll }}</p>
-      <select v-model.number="rollDropdown" v-if="!isEndOfGame">
+      <select class="form-select" v-model.number="rollDropdown" v-if="!isEndOfGame">
         <option v-for="n in pins" :key="n - 1" :value="n - 1">{{ n - 1 }}</option>
         <option :value="remainingPins">{{ strikeOrSpare }}</option>
       </select>
-      <button @click="handleSubmit" :disabled="rollDropdown === ''" v-if="!isEndOfGame">Submit</button>
+      <button class="btn btn-primary" @click="handleSubmit" :disabled="rollDropdown === ''" v-if="!isEndOfGame">Submit</button>
     </div>
   </div>
   <div class="d-flex justify-content-center">
@@ -29,12 +29,12 @@
     </div>
   </div>
   <div class="d-flex justify-content-center">
-    <p v-if="isEndOfGame">Total Score: {{ total }}</p>
+    <p class="display-6" v-if="isEndOfGame">Total Score: {{ total }}</p>
   </div>
   <div class="d-flex justify-content-center">
-    <button @click="newGame" v-if="isEndOfGame">Reset Without Saving</button>
+    <button class="btn btn-danger" @click="newGame" v-if="isEndOfGame">Reset Without Saving</button>
     <!--Need to add a new function for the button below that logs the game in localStorage for now, DB later, and then resets-->
-    <button @click="saveGame" v-if="isEndOfGame">Log Game</button>
+    <button class="btn btn-primary" @click="saveGame" v-if="isEndOfGame">Log Game</button>
   </div>
 </template>
 
@@ -395,7 +395,3 @@
     }
   }
 </script>
-
-<style>
-    body { background-color:  darkslategrey; }
-</style>

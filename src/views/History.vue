@@ -1,21 +1,26 @@
 <template>
     <div class="text-center mt-3 pt-4">
-        <h1 class="display-1" style="color: black"><strong>Game History</strong></h1>
+        <h1 class="display-5"><strong>Game History</strong></h1>
     </div>
     <div class="d-flex justify-content-center" v-if="!hasGameData">
-        <h4 class="display-4" style="color: black">No games to display!</h4>
+        <h4 class="display-5">No games to display!</h4>
     </div>
-    <div class="d-flex justify-content-center" v-if="invalidGames.length !== 0">
-        <h4 class="display-4" style="color: black">{{ invalidGames.length }} games could not be loaded due to invalid data</h4>
-        <button @click="removeInvalidGames">Remove Invalid Games</button>
+    <div class="d-flex align-items-center flex-column" v-if="invalidGames.length !== 0">
+        <h4 class="display-6">{{ invalidGames.length }} games could not be loaded due to invalid data</h4>
+        <button class="btn btn-primary" @click="removeInvalidGames">Remove Invalid Games</button>
+    </div>
+    <div class="d-flex align-items-center flex-column" v-if="hasCorruptedData">
+        <h4 class="display-6">Saved game data corrupted, cannot load</h4>
+        <h4>Please click below to reset all saved data</h4>
+        <button class="btn btn-danger" @click="resetGames">Reset Saved Data</button>
     </div>
     <div class="d-flex align-items-center flex-column">
-        <div v-for="(game, i) in gameHistory" :key="i">
-            <h3 class="display-1" style="color: black">Game {{ i + 1 }}: {{ new Date(game.date).toLocaleString() }}</h3>
-            <div class="scorecard d-flex justify-content-center">
+        <div v-for="(game, i) in gameHistory" :key="i" class="d-flex flex-column align-items-center">
+            <h3 class="mt-4 mb-2">Game {{ i + 1 }}: {{ new Date(game.date).toLocaleString() }}</h3>
+            <div class="scorecard d-flex">
                 <div v-for="(frame, j) in game.frames" :key="j" class="frame-wrapper text-center me-2">
                     <div class="frame-number mb-1">{{ j + 1 }}</div>
-                    <div class=frame-cell>
+                    <div class="frame-cell">
                         <div class="roll-boxes">
                             <div class="roll-box">{{ displayRoll(frame, 1) }}</div>
                             <div class="roll-box">{{ displayRoll(frame, 2) }}</div>
@@ -35,6 +40,7 @@
     export default {
         setup(){
             const invalidGames = ref([])
+            const hasCorruptedData = ref(false)
             const hasGameData = ref(false)
 
             const gameHistory = computed (() => {
@@ -66,7 +72,8 @@
             function removeInvalidGames(){
                 const savedGames = parseSavedGames()
                 if (!savedGames){
-                    alert("Corrupted data, could not remove invalid games")
+                    hasGameData.value = true
+                    hasCorruptedData.value = true
                     return
                 }
                 const cleanedGames = savedGames.filter((game, i) => !invalidGames.value.includes(i))
@@ -78,16 +85,25 @@
                 try {
                     return JSON.parse(localStorage.getItem('completeGames'))
                 } catch (error){
-                    alert("Saved games corrupted, could not load")
+                    hasGameData.value = true
+                    hasCorruptedData.value = true
                     return null
                 }
+            }
+
+            function resetGames(){
+                localStorage.removeItem('completeGames')
+                hasCorruptedData.value = false
+                hasGameData.value = false
             }
             return {
                 hasGameData,
                 gameHistory,
                 invalidGames,
+                hasCorruptedData,
                 displayRoll,
-                removeInvalidGames
+                removeInvalidGames,
+                resetGames
             }
         }
     }

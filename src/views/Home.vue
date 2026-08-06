@@ -1,6 +1,6 @@
 <template>
-    <div class="text-center mt-3 pt-4">
-        <h1 class="display-1" style="color: black"><strong>StrikeTraX</strong></h1>
-        <p style="color: black">Home Page</p>
+    <div class="min-vh-100 d-flex flex-column justify-content-center align-items-center">
+        <h1 class="display-3"><strong>StrikeTraX</strong></h1>
+        <p>Keep track of your bowling scores, frame by frame!</p>
     </div>
 </template>
