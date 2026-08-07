@@ -1,4 +1,5 @@
 .scorecard {
+  /* required for overflow-x to trigger, without it this has nothing to be wider than, the row would just overflow the page instead of scrolling */
   max-width: 100vw;
   overflow-x: auto;
   padding-bottom: 0.5rem;

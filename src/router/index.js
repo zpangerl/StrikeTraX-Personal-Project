@@ -3,6 +3,7 @@ import ScoringView from "../views/Scoring.vue"
 import Home from '../views/Home.vue'
 import History from '../views/History.vue'
 
+// Define the required routes needed for the application
 const routes = [
   {
     path: '/',

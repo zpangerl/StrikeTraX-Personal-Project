@@ -1,3 +1,4 @@
+<!--Navbar and Router View for navigation-->
 <script setup></script>
 
 <template>
