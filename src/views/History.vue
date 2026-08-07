@@ -41,103 +41,86 @@
     </div>
 </template>
 
-<script>
-    import { ref, computed } from 'vue'
-    import { displayRoll, calculateScore} from '../utils/scoring.js'
-    export default {
-        setup(){
-            const invalidGames = ref([])
-            const hasCorruptedData = ref(false)
-            const hasGameData = ref(false)
-
-            /**
-             * Loads and validates saved games from localStorage, converting each one into displayable frames.
-             * Also populates invalidGames with indices of any games that fail validation for easy clean up.
-             * Sets hasGameData to true if at least one valid game is found.
-             * 
-             * @returns {Object[]} - An array of valid games, newest first, each with a date and computed frames.
-             */
-            const gameHistory = computed (() => {
-                const savedGames = parseSavedGames()
-                if (!savedGames) {
-                    return
-                }
-                const savedFrames = []
-                // iterate backwards to list games most-recent-first
-                // update in the future after DB integration to introduce sort filters
-                for (let i = savedGames.length - 1; i >= 0; i--){
-                    if (!savedGames[i] || !Array.isArray(savedGames[i].throws) || savedGames[i].throws.length === 0){
-                        invalidGames.value.push(i)
-                        continue
-                    }
-                    const calculateResult = calculateScore(savedGames[i].throws)
-                    if (!calculateResult.isValid){
-                        invalidGames.value.push(i)
-                        continue
-                    }
-                    const preparedGame = {
-                        date: savedGames[i].date,
-                        frames: calculateResult.frames
-                    }
-                    savedFrames.push(preparedGame)
-                }
-                if (savedFrames.length > 0) hasGameData.value = true
-                return savedFrames
-            })
-
-            /**
-             * Removes any invalid games from localStorage.
-             * 
-             * Will be updated to remove from DB in the future.
-             */
-            function removeInvalidGames(){
-                const savedGames = parseSavedGames()
-                if (!savedGames){
-                    // need to update hasGameData to true to avoid displaying "no games" and "corrupt data" messages together
-                    hasGameData.value = true
-                    hasCorruptedData.value = true
-                    return
-                }
-                // remove invalid games from list of saved games via filter
-                const cleanedGames = savedGames.filter((game, i) => !invalidGames.value.includes(i))
-                localStorage.setItem('completeGames', JSON.stringify(cleanedGames))
-                invalidGames.value.length = 0
-            }
-
-            /**
-             * Simple helper function to parse saved game data.
-             * Handles corrupt save data by updating state variables.
-             * @returns {Array|null} - Parsed saved game data, or null if invalid JSON syntax.
-             */
-            function parseSavedGames(){
-                try {
-                    return JSON.parse(localStorage.getItem('completeGames'))
-                } catch (error){
-                    hasGameData.value = true
-                    hasCorruptedData.value = true
-                    return null
-                }
-            }
-
-            /**
-             * Recovers from corrupted save data by removing all save data.
-             * 
-             * Once DB is in place, will be able to recover more gracefully.
-             */
-            function resetGames(){
-                localStorage.removeItem('completeGames')
-                hasCorruptedData.value = false
-                hasGameData.value = false
-            }
-            return {
-                hasGameData,
-                gameHistory,
-                invalidGames,
-                hasCorruptedData,
-                displayRoll,
-                removeInvalidGames,
-                resetGames
-            }
-        }
-    }
+<script setup>
+  import { ref, computed } from 'vue'
+  import { displayRoll, calculateScore} from '../utils/scoring.js'
+  const invalidGames = ref([])
+  const hasCorruptedData = ref(false)
+  const hasGameData = ref(false)
+  /**
+   * Loads and validates saved games from localStorage, converting each one into displayable frames.
+   * Also populates invalidGames with indices of any games that fail validation for easy clean up.
+   * Sets hasGameData to true if at least one valid game is found.
+   * 
+   * @returns {Object[]} - An array of valid games, newest first, each with a date and computed frames.
+   */
+  const gameHistory = computed (() => {
+      const savedGames = parseSavedGames()
+      if (!savedGames) {
+          return
+      }
+      const savedFrames = []
+      // iterate backwards to list games most-recent-first
+      // update in the future after DB integration to introduce sort filters
+      for (let i = savedGames.length - 1; i >= 0; i--){
+          if (!savedGames[i] || !Array.isArray(savedGames[i].throws) || savedGames[i].throws.length === 0){
+              invalidGames.value.push(i)
+              continue
+          }
+          const calculateResult = calculateScore(savedGames[i].throws)
+          if (!calculateResult.isValid){
+              invalidGames.value.push(i)
+              continue
+          }
+          const preparedGame = {
+              date: savedGames[i].date,
+              frames: calculateResult.frames
+          }
+          savedFrames.push(preparedGame)
+      }
+      if (savedFrames.length > 0) hasGameData.value = true
+      return savedFrames
+  })
+  /**
+   * Removes any invalid games from localStorage.
+   * 
+   * Will be updated to remove from DB in the future.
+   */
+  function removeInvalidGames(){
+      const savedGames = parseSavedGames()
+      if (!savedGames){
+          // need to update hasGameData to true to avoid displaying "no games" and "corrupt data" messages together
+          hasGameData.value = true
+          hasCorruptedData.value = true
+          return
+      }
+      // remove invalid games from list of saved games via filter
+      const cleanedGames = savedGames.filter((game, i) => !invalidGames.value.includes(i))
+      localStorage.setItem('completeGames', JSON.stringify(cleanedGames))
+      invalidGames.value.length = 0
+  }
+  /**
+   * Simple helper function to parse saved game data.
+   * Handles corrupt save data by updating state variables.
+   * @returns {Array|null} - Parsed saved game data, or null if invalid JSON syntax.
+   */
+  function parseSavedGames(){
+      try {
+          return JSON.parse(localStorage.getItem('completeGames'))
+      } catch (error){
+          hasGameData.value = true
+          hasCorruptedData.value = true
+          return null
+      }
+  }
+  /**
+   * Recovers from corrupted save data by removing all save data.
+   * 
+   * Once DB is in place, will be able to recover more gracefully.
+   */
+  function resetGames(){
+      localStorage.removeItem('completeGames')
+      hasCorruptedData.value = false
+      hasGameData.value = false
+  }
 </script>
