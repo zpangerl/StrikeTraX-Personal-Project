@@ -42,6 +42,7 @@
 <script setup>
   import { ref, computed } from 'vue'
   import { displayRoll, calculateScore, initializeFrames, validateThrow } from '../utils/scoring'
+  import { loadPartialGame, clearPartialGame, loadCompleteGames, saveCompleteGames, savePartialGame } from '../utils/gameStorage'
 
   const isEndOfGame = ref(false)
   const total = ref(0)
@@ -227,16 +228,6 @@
   }
 
   /**
-   * Saves the partial throws array of the current game to localStorage
-   * 
-   * This exists in case the user navigates away, refreshes the page, or closes the browser.
-   * @param {number[]} throwsArray - The partial throws array of the current game to be saved
-   */
-  function savePartialGame(throwsArray){
-    localStorage.setItem('throws', JSON.stringify(throwsArray))
-  }
-
-  /**
    * Resets state variables and clears partial game storage to facilitate starting a new game
    */
   function newGame(){
@@ -247,7 +238,7 @@
     secondRoll = null
     throws.length = 0
     frames.value.length = 0
-    localStorage.removeItem('throws')
+    clearPartialGame()
     frames.value = initializeFrames()
     total.value = 0
     resetPins()
@@ -263,7 +254,7 @@
     let savedGames = null
     // attempt to read saved games, if it fails, refuse to save
     try {
-      savedGames = JSON.parse(localStorage.getItem('completeGames'))
+      savedGames = loadCompleteGames()
     } catch (error){
       alert("Corrupted game data, game could not be saved")
       newGame()
@@ -279,12 +270,12 @@
     if (savedGames === null){
       newSave.throws = throws
       storeGames.push(newSave)
-      localStorage.setItem('completeGames', JSON.stringify(storeGames))
+      saveCompleteGames(storeGames)
     }
     else {
       newSave.throws = throws
       savedGames.push(newSave)
-      localStorage.setItem('completeGames', JSON.stringify(savedGames))
+      saveCompleteGames(savedGames)
     }
     newGame()
   }
@@ -297,7 +288,7 @@
     if (localStorage.getItem('throws') !== null){
       // if the saved partial game is invalid data, just purge and start a new game
       try{
-      throws = JSON.parse(localStorage.getItem('throws'))
+      throws = loadPartialGame()
       } catch (error){
         newGame()
         alert("Invalid save data, starting new game")
