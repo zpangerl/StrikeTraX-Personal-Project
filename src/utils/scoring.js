@@ -14,9 +14,9 @@
 export function displayRoll(frame, rollNum){
     const roll = frame[`roll${rollNum}`]
     if (roll === null) return ''
-    if (roll === 10) return 'X'
-    else if (rollNum === 2 && frame.roll1 + roll === 10 && frame.roll1 !== 10) return '/'
+    if (rollNum === 2 && frame.roll1 + roll === 10 && frame.roll1 !== 10) return '/'
     else if (rollNum === 3 && frame.roll2 + roll === 10 && frame.roll2 !== 10) return '/'
+    else if (roll === 10) return 'X'
     else return roll
 }
 
