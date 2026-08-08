@@ -66,6 +66,7 @@
     loadGame()
   }
   // if for some reason currentFrame is out of bounds, reset the game
+  // realistically only possible with devtools
   else if (currentFrame.value < 1 || currentFrame.value > 10) newGame()
 
   /**

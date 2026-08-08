@@ -125,6 +125,20 @@ describe('calculateScore - validation', () => {
     const result = calculateScore(['strike'])
     expect(result.isValid).toBe(false)
   })
+
+  it('flags the game invalid when there are extra throws after an open 10th frame', () => {
+    // quick and easy way to "skip" to frame 10
+    const nineOpenFrames = Array(18).fill(0)
+    const result = calculateScore([...nineOpenFrames, 6, 3, 5])
+    expect(result.isValid).toBe(false)
+  })
+
+  it('flags the game invalid when there are extra throws after a completed bonus throw in the 10th frame', () => {
+    // quick and easy way to "skip" to frame 10
+    const nineOpenFrames = Array(18).fill(0)
+    const result = calculateScore([...nineOpenFrames, 10, 10, 10, 5])
+    expect(result.isValid).toBe(false)
+  })
 })
 
 describe('calculateScore - strikes in frames 1-9', () => {

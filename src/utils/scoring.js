@@ -146,6 +146,11 @@ export function calculateScore(throwsArray){
           }
           // if not, the game is over
           else{
+            // check for extra, invalid throws
+            if (throwsIter + 1 !== throwsArray.length){
+              returnJSON.isValid = false
+              return returnJSON
+            }
             // set total pins to 10, since the frame at this point is complete
             totalPinsThisFrame = 10
             currentTotal += nextThrow
@@ -159,6 +164,11 @@ export function calculateScore(throwsArray){
       }
       // optional third throw, if strike or spare have been made in the first two throws
       else if (currentThrow === 3){
+        // check for extra, invalid throws
+        if (throwsIter + 1 !== throwsArray.length){
+          returnJSON.isValid = false
+          return returnJSON
+        }
         currentTotal += nextThrow
         gameFrames[currentFrame - 1].roll3 = nextThrow
         // update current total of current frame
