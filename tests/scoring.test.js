@@ -79,6 +79,11 @@ describe('displayRoll', () => {
     expect(displayRoll(frame, 2)).toBe('/')
   })
 
+  it('returns / for a spare on roll2 with a 0 for roll1', () => {
+    const frame = { frame: 1, roll1: 0, roll2: 10, currentTotal: null }
+    expect(displayRoll(frame, 2)).toBe('/')
+  })
+
   it('returns the raw value on roll2 when it does not complete a spare', () => {
     const frame = { frame: 1, roll1: 6, roll2: 3, currentTotal: 9 }
     expect(displayRoll(frame, 2)).toBe(3)
