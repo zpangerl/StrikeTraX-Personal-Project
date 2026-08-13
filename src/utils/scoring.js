@@ -192,7 +192,7 @@ export function calculateScore(throwsArray){
       // if the current throw isn't the first, frame is finished, so update the current total of the current frame
       // if the frame isn't finished, we don't display the current frame's score yet
       // this will also keep the first throw after a strike from displaying a score before the strike is resolved
-      if (currentThrow != 1){
+      if (currentThrow !== 1){
         gameFrames[currentFrame - 1].currentTotal = currentTotal
       }
       currentThrow++
