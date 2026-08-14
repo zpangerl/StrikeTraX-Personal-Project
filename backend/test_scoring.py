@@ -76,6 +76,7 @@ def test_flags_the_game_invalid_when_there_is_an_unresolved_frame_1_to_9_spare()
 def test_resolves_the_strike_and_reveals_the_total_once_both_bonus_throws_are_available():
     throws = [10, 3, 4]
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["frames"][0]["roll_1"] == 10)
     assert(result["frames"][0]["current_total"] == 17)
     assert(result["curr_frame"] == 3)
@@ -85,6 +86,7 @@ def test_resolves_the_strike_and_reveals_the_total_once_both_bonus_throws_are_av
 def test_resolves_the_spare_and_reveals_the_total_once_bonus_throw_is_available():
     throws = [6, 4, 5]
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["frames"][0]["current_total"] == 15)
     assert(result["curr_frame"] == 2)
     return
@@ -93,6 +95,7 @@ def test_resolves_the_spare_and_reveals_the_total_once_bonus_throw_is_available(
 def test_reveals_the_total_once_both_throws_of_an_open_frame_are_complete():
     throws = [3, 4]
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["frames"][0]["roll_1"] == 3)
     assert(result["frames"][0]["roll_2"] == 4)
     assert(result["frames"][0]["current_total"] == 7)
@@ -105,6 +108,7 @@ def test_tracks_a_non_strike_first_throw():
     throws = [0 for i in range(18)]
     throws.append(5)
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["curr_frame"] == 10)
     assert(result["curr_throw"] == 2)
     assert(result["frames"][9]["roll_1"] == 5)
@@ -113,6 +117,7 @@ def test_tracks_a_strike_first_throw():
     throws = [0 for i in range(18)]
     throws.append(10)
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["curr_throw"] == 2)
     assert(result["frames"][9]["roll_1"] == 10)
     return
@@ -120,6 +125,7 @@ def test_tracks_a_second_throw_strike_after_a_first_throw_strike():
     throws = [0 for i in range(18)]
     throws.extend([10, 10])
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["frames"][9]["roll_1"] == 10)
     assert(result["frames"][9]["roll_2"] == 10)
     assert(result["curr_throw"] == 3)
@@ -128,6 +134,7 @@ def test_tracks_a_non_strike_second_throw_after_a_first_throw_strike():
     throws = [0 for i in range(18)]
     throws.extend([10, 4])
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["frames"][9]["roll_2"] == 4)
     assert(result["curr_throw"] == 3)
     return
@@ -135,6 +142,7 @@ def test_tracks_a_second_throw_that_completes_a_spare():
     throws = [0 for i in range(18)]
     throws.extend([6, 4])
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["frames"][9]["roll_1"] == 6)
     assert(result["frames"][9]["roll_2"] == 4)
     assert(result["curr_throw"] == 3)
@@ -152,6 +160,7 @@ def test_records_a_third_throw_following_an_earned_bonus_and_reveals_the_total_i
     throws = [0 for i in range(18)]
     throws.extend([10, 10, 10])
     result = calculate_score(throws)
+    assert(result["is_valid"])
     assert(result["frames"][9]["roll_1"] == 10)
     assert(result["frames"][9]["roll_2"] == 10)
     assert(result["frames"][9]["roll_3"] == 10)
@@ -161,6 +170,7 @@ def test_reveals_frame_10_totals_progressively():
     throws = [0 for i in range(18)]
     throws.extend([10, 4])
     result = calculate_score(throws)
+    assert(not result["is_valid"])
     assert(result["frames"][9]["current_total"] == 14)
     return
 

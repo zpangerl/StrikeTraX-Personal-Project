@@ -138,6 +138,12 @@ def calculate_score(throws_array):
             total_pins_this_frame = 0
         throws_iter += 1
     # populate and return JSON object
+    if (current_frame != 10 or current_throw < 3):
+        return_JSON["is_valid"] = False
+    elif (current_frame == 10 and current_throw == 3):
+        frame_10_sum = game_frames[9]["roll_1"] + game_frames[9]["roll_2"]
+        if (frame_10_sum >= 10):
+            return_JSON["is_valid"] = False
     return_JSON["total"] = current_total
     return_JSON["curr_throw"] = current_throw
     return_JSON["curr_frame"] = current_frame
