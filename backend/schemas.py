@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-class GameModel(BaseModel):
+class GameRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     throws: list[int]
     game_id: int
@@ -10,4 +10,4 @@ class GameStoreRequest(BaseModel):
     total: int
 
 class GameListResponse(BaseModel):
-    games: list[GameModel]
+    games: list[GameRead]
