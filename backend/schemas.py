@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 class Game(BaseModel):
     throws: list[int]
-    id: int
+    game_id: int
 
 class GameStoreRequest(BaseModel):
     throws: list[int]
