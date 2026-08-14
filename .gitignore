@@ -40,3 +40,6 @@ __screenshots__/
 
 # Backend Folder
 __pycache__/
+
+# .env
+.env
