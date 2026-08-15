@@ -247,39 +247,38 @@
   }
 
   /**
-   * Saves a completed game to localStorage for display in History
-   * 
-   * Will be repurposed in the future to save to the database
-   */
-  function saveGame(){
-    let savedGames = null
-    // attempt to read saved games, if it fails, refuse to save
-    try {
-      savedGames = loadCompleteGames()
-    } catch (error){
-      alert("Corrupted game data, game could not be saved")
+   * Saves a completed game to the Azure SQL database
+   */  
+  async function saveGame(){
+    let sessionID = localStorage.getItem('sessionID')
+    if (sessionID === null){
+      sessionID = crypto.randomUUID()
+      localStorage.setItem('sessionID', sessionID)
+    }
+    // actually save the game from here on
+    const response = await fetch('http://127.0.0.1:8000/games', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        throws: throws,
+        total_score: total.value,
+        session_id: sessionID
+      })
+    })
+    if(response.status === 422){
+      alert("Game contained invalid data, starting new game")
       newGame()
+    }
+    else if(!response.ok){
+      alert("Your game could not be saved, please try again")
       return
     }
-    const currDate = new Date().toISOString()
-    let storeGames = []
-    const newSave = {
-      date: currDate,
-      throws: null
+    else{
+      alert("Game was saved!")
+      newGame()
     }
-    // if there are no saved games yet
-    if (savedGames === null){
-      newSave.throws = throws
-      storeGames.push(newSave)
-      saveCompleteGames(storeGames)
-    }
-    else {
-      newSave.throws = throws
-      savedGames.push(newSave)
-      saveCompleteGames(savedGames)
-    }
-    newGame()
   }
+
 /**
    * Loads a partial game from localStorage and prepares it to be displayed and continued.
    * 

@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from pydantic import BaseModel, ConfigDict
 
 class GameRead(BaseModel):
@@ -7,10 +8,12 @@ class GameRead(BaseModel):
     game_id: int
     total_score: int
     date: datetime.datetime
+    session_id: uuid.UUID
 
 class GameStoreRequest(BaseModel):
     throws: list[int]
     total_score: int
+    session_id: uuid.UUID
 
 class GameListResponse(BaseModel):
     games: list[GameRead]
