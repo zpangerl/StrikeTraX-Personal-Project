@@ -42,7 +42,7 @@
 <script setup>
   import { ref, computed } from 'vue'
   import { displayRoll, calculateScore, initializeFrames, validateThrow } from '../utils/scoring'
-  import { loadPartialGame, clearPartialGame, loadCompleteGames, saveCompleteGames, savePartialGame } from '../utils/gameStorage'
+  import { loadPartialGame, clearPartialGame, savePartialGame } from '../utils/gameStorage'
 
   const isEndOfGame = ref(false)
   const total = ref(0)
