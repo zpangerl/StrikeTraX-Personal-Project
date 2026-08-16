@@ -51,8 +51,9 @@
 
   /**
    * Loads and validates saved games from the database, converting each one into displayable frames.
-   * Also populates invalidGames with indices of any games that fail validation for easy cleanup.
+   * Also populates invalidGames with indices of any games that fail validation.
    * Sets hasGameData to true if at least one valid game is found.
+   * Sets isLoading to false so that the page will load after any games are retrieved.
    */
   async function loadGameHistory(){
     const response = await fetchSavedGames()
