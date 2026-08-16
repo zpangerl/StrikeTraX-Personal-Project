@@ -256,15 +256,21 @@
       localStorage.setItem('sessionID', sessionID)
     }
     // actually save the game from here on
-    const response = await fetch('http://127.0.0.1:8000/games', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        throws: throws,
-        total_score: total.value,
-        session_id: sessionID
+    let response = null
+    try{
+      response = await fetch('http://127.0.0.1:8000/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          throws: throws,
+          total_score: total.value,
+          session_id: sessionID
+        })
       })
-    })
+    } catch (error){
+      alert("Your game could not be saved, please try again")
+      return
+    } 
     if(response.status === 422){
       alert("Game contained invalid data, starting new game")
       newGame()

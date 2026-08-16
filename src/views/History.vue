@@ -10,7 +10,7 @@
     <!--Invalid games in this context mean impossible scores, such as negative numbers, more than 10 pins in a frame, string instead of a number, etc-->
     <!--With the database, this shouldn't happen, but is technically still possible with devtools-->
     <div class="d-flex align-items-center flex-column" v-if="invalidGames.length !== 0">
-        <h4 class="display-6">{{ invalidGames.length }} games could not be loaded due to invalid data</h4>
+        <h4 class="display-6">{{ invalidGames.length }} {{ invalidGames.length === 1 ? 'game' : 'games' }} could not be loaded due to invalid data</h4>
     </div>
     <!--Will only appear if the save data is corrupted-->
     <!--With the database this shouldn't happen, but is technically still possible with devtools-->
@@ -99,7 +99,13 @@
         return null
     }
     // attempt to get the games from the database
-    const response = await fetch(`http://127.0.0.1:8000/games?session_id=${sessionID}`)
+    let response = null
+    try {
+    response = await fetch(`http://127.0.0.1:8000/games?session_id=${sessionID}`)
+    } catch (error) {
+        alert("Could not retrieve games, please try again")
+        return null
+    }
     if (response.status === 422){
         alert("Invalid session ID")
         return null
