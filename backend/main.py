@@ -20,20 +20,20 @@ app.add_middleware(
 )
 
 @app.get("/games")
-def retrieve_games(session_id: uuid.UUID):
+def retrieve_games(session_id: uuid.UUID) -> GameListResponse:
     with Session(engine) as session:
         try:
             raw_results = session.execute(select(Game).where(Game.session_id == session_id)).scalars().all()
             converted = [GameRead.model_validate(item) for item in raw_results]
 
-        except SQLAlchemyError as e:
-            logging.exception("Failed to retrieve games from database")
+        except SQLAlchemyError:
+            logging.exception("Failed to retrieve games from Database")
             raise HTTPException(status_code=500, detail="Failed to retrieve games, please try again")
     response = GameListResponse(games=converted)
     return response
 
 @app.post("/games", status_code=201)
-def store_game(new_game: GameStoreRequest):
+def store_game(new_game: GameStoreRequest) -> bool:
     throws = new_game.throws
     total = new_game.total_score
     session_id = new_game.session_id
@@ -47,7 +47,7 @@ def store_game(new_game: GameStoreRequest):
         try:
             session.add(game_store)
             session.commit()
-        except SQLAlchemyError as e:
-            logging.exception("Failed to add game to database")
+        except SQLAlchemyError:
+            logging.exception("Failed to add new game to Database")
             raise HTTPException(status_code=500, detail="Failed to add game to database, please try again")
     return True

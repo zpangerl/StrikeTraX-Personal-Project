@@ -5,7 +5,7 @@ def calculate_score(throws_array):
     current_throw = 1
     current_frame = 1
     game_frames = initialize_frames()
-    return_JSON = {
+    return_json = {
         "frames": None,
         "is_valid": True,
         "curr_throw": 1,
@@ -17,8 +17,8 @@ def calculate_score(throws_array):
     while (throws_iter < len(throws_array)):
         next_throw = throws_array[throws_iter]
         if (not validate_throw(next_throw, 10 - total_pins_this_frame)):
-            return_JSON["is_valid"] = False
-            return return_JSON
+            return_json["is_valid"] = False
+            return return_json
         # If the current throw being processed is the first throw of a frame, is a strike, and is not in frame 10
         if (current_throw == 1 and next_throw == 10 and current_frame != 10):
             # check to see if next two throws exist to resolve strike
@@ -26,12 +26,12 @@ def calculate_score(throws_array):
             if (throws_iter + 2 >= len(throws_array)):
                 # no need to check for next throw for display purposes here, since the game is invalid
                 game_frames[current_frame - 1]["roll_1"] = next_throw
-                return_JSON["frames"] = game_frames
-                return_JSON["curr_throw"] = current_throw
-                return_JSON["curr_frame"] = current_frame
-                return_JSON["pins_left"] = 10 - total_pins_this_frame
-                return_JSON["is_valid"] = False
-                return return_JSON
+                return_json["frames"] = game_frames
+                return_json["curr_throw"] = current_throw
+                return_json["curr_frame"] = current_frame
+                return_json["pins_left"] = 10 - total_pins_this_frame
+                return_json["is_valid"] = False
+                return return_json
             # if the 2 throws after the strike exist, update pin count for the frame
             total_pins_this_frame += next_throw
             # update current total, applying the next two throws to the current strike per bowling rules
@@ -48,17 +48,17 @@ def calculate_score(throws_array):
             if (throws_iter + 1 >= len(throws_array)):
                 game_frames[current_frame - 1]["roll_2"] = next_throw
                 game_frames[current_frame - 1]["current_total"] = None
-                return_JSON["frames"] = game_frames
-                return_JSON["curr_throw"] = current_throw
-                return_JSON["curr_frame"] = current_frame
-                return_JSON["pins_left"] = 10 - total_pins_this_frame
-                return_JSON["is_valid"] = False
-                return return_JSON
+                return_json["frames"] = game_frames
+                return_json["curr_throw"] = current_throw
+                return_json["curr_frame"] = current_frame
+                return_json["pins_left"] = 10 - total_pins_this_frame
+                return_json["is_valid"] = False
+                return return_json
             # if the throw after the spare exists, update pin count for the frame
             total_pins_this_frame += next_throw
             # update current total, applying the next throw to the current spare per bowling rules
             current_total += next_throw
-            current_total  += throws_array[throws_iter + 1]
+            current_total += throws_array[throws_iter + 1]
             game_frames[current_frame - 1]["roll_2"] = next_throw
             # update current total of current frame, since spare is fully resolved
             game_frames[current_frame - 1]["current_total"] = current_total
@@ -89,8 +89,8 @@ def calculate_score(throws_array):
                     else:
                         # check for extra, invalid throws
                         if (throws_iter + 1 != len(throws_array)):
-                            return_JSON["is_valid"] = False
-                            return return_JSON
+                            return_json["is_valid"] = False
+                            return return_json
                         # set total pins to 10, since the frame at this point is complete
                         total_pins_this_frame = 10
                         current_total += next_throw
@@ -103,8 +103,8 @@ def calculate_score(throws_array):
             elif (current_throw == 3):
                 # check for extra, invalid throws
                 if (throws_iter + 1 != len(throws_array)):
-                    return_JSON["is_valid"] = False
-                    return return_JSON
+                    return_json["is_valid"] = False
+                    return return_json
                 current_total += next_throw
                 game_frames[current_frame - 1]["roll_3"] = next_throw
                 # update current total of current frame
@@ -139,17 +139,17 @@ def calculate_score(throws_array):
         throws_iter += 1
     # populate and return JSON object
     if (current_frame != 10 or current_throw < 3):
-        return_JSON["is_valid"] = False
+        return_json["is_valid"] = False
     elif (current_frame == 10 and current_throw == 3):
         frame_10_sum = game_frames[9]["roll_1"] + game_frames[9]["roll_2"]
         if (frame_10_sum >= 10):
-            return_JSON["is_valid"] = False
-    return_JSON["total"] = current_total
-    return_JSON["curr_throw"] = current_throw
-    return_JSON["curr_frame"] = current_frame
-    return_JSON["pins_left"] = 10 - total_pins_this_frame
-    return_JSON["frames"] = game_frames
-    return return_JSON
+            return_json["is_valid"] = False
+    return_json["total"] = current_total
+    return_json["curr_throw"] = current_throw
+    return_json["curr_frame"] = current_frame
+    return_json["pins_left"] = 10 - total_pins_this_frame
+    return_json["frames"] = game_frames
+    return return_json
 
 def initialize_frames():
     frames = [{"frame": x + 1, "roll_1": None, "roll_2": None, "current_total": None} for x in range(0, 9)]
