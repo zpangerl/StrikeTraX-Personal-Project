@@ -152,7 +152,7 @@ def calculate_score(throws_array):
     return return_json
 
 def initialize_frames():
-    frames = [{"frame": x + 1, "roll_1": None, "roll_2": None, "current_total": None} for x in range(0, 9)]
+    frames = [{"frame": x + 1, "roll_1": None, "roll_2": None, "current_total": None} for x in range(9)]
     frames.append({"frame": 10, "roll_1": None, "roll_2": None, "roll_3": None, "current_total": None})
     return frames
 

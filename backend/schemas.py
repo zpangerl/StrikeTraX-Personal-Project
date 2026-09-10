@@ -1,6 +1,8 @@
 import datetime
 import uuid
+
 from pydantic import BaseModel, ConfigDict
+
 
 class GameRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)

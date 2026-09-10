@@ -1,16 +1,20 @@
 import logging
 import uuid
-from database import engine
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from models import Game
-from schemas import GameStoreRequest, GameListResponse, GameRead
-from scoring import calculate_score
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from database import engine
+from models import Game
+from schemas import GameListResponse, GameRead, GameStoreRequest
+from scoring import calculate_score
+
 app = FastAPI()
+
+logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,7 +31,7 @@ def retrieve_games(session_id: uuid.UUID) -> GameListResponse:
             converted = [GameRead.model_validate(item) for item in raw_results]
 
         except SQLAlchemyError:
-            logging.exception("Failed to retrieve games from Database")
+            logger.exception("Failed to retrieve games from Database")
             raise HTTPException(status_code=500, detail="Failed to retrieve games, please try again")
     response = GameListResponse(games=converted)
     return response
@@ -48,6 +52,6 @@ def store_game(new_game: GameStoreRequest) -> bool:
             session.add(game_store)
             session.commit()
         except SQLAlchemyError:
-            logging.exception("Failed to add new game to Database")
+            logger.exception("Failed to add new game to Database")
             raise HTTPException(status_code=500, detail="Failed to add game to database, please try again")
     return True

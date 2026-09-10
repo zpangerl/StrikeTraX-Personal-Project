@@ -1,4 +1,5 @@
-from sqlalchemy import create_engine, URL
+from sqlalchemy import URL, create_engine
+
 from settings import Settings
 
 settings = Settings()
