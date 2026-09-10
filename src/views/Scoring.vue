@@ -33,7 +33,7 @@
   <div class="d-flex justify-content-center">
     <p class="display-6" v-if="isEndOfGame">Total Score: {{ total }}</p>
   </div>
-  <div class="d-flex justify-content-center">
+  <div class="d-flex justify-content-center" v-if="!currentlySaving">
     <button class="btn btn-danger" @click="newGame" v-if="isEndOfGame">Reset Without Saving</button>
     <button class="btn btn-primary" @click="saveGame" v-if="isEndOfGame">Log Game</button>
   </div>
@@ -45,6 +45,7 @@
   import { loadPartialGame, clearPartialGame, savePartialGame } from '../utils/gameStorage'
 
   const isEndOfGame = ref(false)
+  const currentlySaving = ref(false)
   const total = ref(0)
   const currentFrame = ref(1)
   const currentRoll = ref(1)
@@ -247,9 +248,18 @@
   }
 
   /**
+   * Ensures that the browser alerts the user before they leave, during awaits
+   */
+  function handleBeforeUnload(event){
+    event.preventDefault()
+  }
+
+  /**
    * Saves a completed game to the Azure SQL database
    */  
   async function saveGame(){
+    currentlySaving.value = true
+    window.addEventListener('beforeunload', handleBeforeUnload)
     let sessionID = localStorage.getItem('sessionID')
     if (sessionID === null){
       sessionID = crypto.randomUUID()
@@ -267,21 +277,25 @@
           session_id: sessionID
         })
       })
+      if(response.status === 422){
+        alert("Game contained invalid data, starting new game")
+        newGame()
+      }
+      else if(!response.ok){
+        alert("Your game could not be saved, please try again")
+        return
+      }
+      else{
+        alert("Game was saved!")
+        newGame()
+      }
     } catch (error){
       alert("Your game could not be saved, please try again")
       return
-    } 
-    if(response.status === 422){
-      alert("Game contained invalid data, starting new game")
-      newGame()
     }
-    else if(!response.ok){
-      alert("Your game could not be saved, please try again")
-      return
-    }
-    else{
-      alert("Game was saved!")
-      newGame()
+    finally{
+      currentlySaving.value = false
+      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }
 
