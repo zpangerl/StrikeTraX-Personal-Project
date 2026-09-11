@@ -101,7 +101,7 @@
     // attempt to get the games from the database
     let response = null
     try {
-    response = await fetch(`http://127.0.0.1:8000/games?session_id=${sessionID}`)
+    response = await fetch(`${import.meta.env.VITE_API_URL}/games?session_id=${sessionID}`)
     } catch (error) {
         alert("Could not retrieve games, please try again")
         return null

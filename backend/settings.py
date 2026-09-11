@@ -8,3 +8,4 @@ class Settings(BaseSettings):
     db_name: str
     db_user: str
     db_password: str
+    frontend_origin: str

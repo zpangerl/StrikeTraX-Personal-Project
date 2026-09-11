@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from database import engine
+from database import engine, settings
 from models import Game
 from schemas import GameListResponse, GameRead, GameStoreRequest
 from scoring import calculate_score
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[settings.frontend_origin],
     allow_methods=["POST", "GET"],
     allow_headers=["Content-Type"]
 )

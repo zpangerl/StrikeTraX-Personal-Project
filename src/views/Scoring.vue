@@ -268,7 +268,7 @@
     // actually save the game from here on
     let response = null
     try{
-      response = await fetch('http://127.0.0.1:8000/games', {
+      response = await fetch(`${import.meta.env.VITE_API_URL}/games`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
