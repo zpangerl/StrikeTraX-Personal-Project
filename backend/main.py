@@ -1,8 +1,11 @@
 import logging
 import uuid
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -15,6 +18,10 @@ from scoring import calculate_score
 app = FastAPI()
 
 logger = logging.getLogger(__name__)
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,7 +44,8 @@ def retrieve_games(session_id: uuid.UUID) -> GameListResponse:
     return response
 
 @app.post("/games", status_code=201)
-def store_game(new_game: GameStoreRequest) -> bool:
+@limiter.limit("5/minute")
+def store_game(request: Request, new_game: GameStoreRequest) -> bool:
     throws = new_game.throws
     total = new_game.total_score
     session_id = new_game.session_id
