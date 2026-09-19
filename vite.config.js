@@ -22,5 +22,6 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: ['src/utils/**'],
     },
+    environment: 'jsdom',
   },
 })
