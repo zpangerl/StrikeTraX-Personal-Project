@@ -10,8 +10,8 @@ StrikeTraX is a bowling score tracking web application that allows for live thro
 
 * Full, live, ten-pin scoring, including all 10th frame special cases
 * Reactive display of current game state, including strikes, spares, rolling total, and current frame/roll
-* Save/load for incomplete game
-* Game history with persistence, including detection and recovery from corrupted or invalid save data
+* Save/load for incomplete game, validation and storage still done locally
+* Game history with persistence, via the Azure SQL database
 * Easy navigation through a nav bar and Vue Router
 * Responsive, mobile-friendly layout
 
@@ -21,8 +21,21 @@ StrikeTraX is a bowling score tracking web application that allows for live thro
 - [Vite](https://vitejs.dev/)
 - [Vue Router](https://router.vuejs.org/)
 - [Bootstrap 5](https://getbootstrap.com/) via the [Bootswatch](https://bootswatch.com/) Darkly theme
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [SQLAlchemy](https://www.sqlalchemy.org/)
+- [Pydantic](https://pydantic.dev/)
+- [Azure SQL](https://azure.microsoft.com/en-us/products/azure-sql/database)
+- [SlowAPI](https://slowapi.readthedocs.io/en/latest/)
 
 ## Getting Started
+
+You must have the following things installed before starting:
+
+- Node 20.19.0+ (within the 20.x line), or 22.12.0+.
+- Python 3.12
+- uv
+- ODBC Driver 18 for SQL Server
+- An Azure SQL database, a free one is enough
 
 Clone the repository and install dependencies:
 
@@ -30,37 +43,52 @@ Clone the repository and install dependencies:
 git clone https://github.com/zpangerl/StrikeTraX-Personal-Project.git
 cd StrikeTraX-Personal-Project
 npm install
+cd backend
+uv sync
 ```
 
-Run the local dev server:
+Copy each .env.example to a .env file in the same directory, and fill them with real values:
+- Root .env - VITE_API_URL
+- Backend .env - DB fields and FRONTEND_ORIGIN
 
+Then, create the game table in the database:
+
+```sh
+uv run python create_tables.py
+```
+
+Run the following, from two different terminals:
+
+Terminal 1, from backend/
+```sh
+uv run fastapi dev main.py
+```
+
+Terminal 2, from repo root
 ```sh
 npm run dev
 ```
 
 ## Notable Design Decisions
 
-* Decided to focus on basic functionality and UI first, leading to localStorage being used. Phase 2 of this project involves integrating a SQL database instead.
+* Phase 2 of this project added a database with Azure SQL. This allows games to be saved in a stored database.
+* Until Phase 4 is done, a session ID is generated or retrieved by the client to be sent to the database, and is used to retrieve only the user's games.
 * History is currently unbounded, you could enter a hundred games, but given the current scale of the application I felt like pagination was fine to set aside for now.
 * Currently, corrupted or invalid partial game data is simply discarded, this should be essentially impossible to do without directly messing with devtools, so this is fine for partial games.
-* Corrupted completed games will currently result in a full wipe, since the next phase of this project involves adding a SQL database, this will be handled differently in the future.
-* Invalid completed games will allow the user to remove just those games; per-game checking won't be needed when the database is integrated.
+* Invalid games that are sent to the database are detected and refused. This includes invalid values, out of bound numbers, and a final score that doesn't match the backend's calculation.
+* History page detects and flags corrupted games from API responses and hides them. This realistically should only happen with response tampering, but if for some reason the database holds invalid info it will hide that game.
+* History page will display an error message if the response data itself is corrupted.
 
 ## Roadmap
 
 Remaining phases to be completed:
 
-### Phase 2
-
-* Add an actual backend using Python/FastAPI, including POST/GET endpoints
-* Add a SQL database using SQLAlchemy and Azure SQL
-* Integrate basic anonymous session IDs as a placeholder for future login authentication
-* Deploy to Azure
-
 ### Phase 3
 
 * Sorting options on History page, oldest-newest, newest-oldest, high-low, low-high
 * Date filtering on History page, pick two dates and see all games between them
+* Add editing to the game in progress, right now you have to finish the game and choose to not keep it, bad UX
+* Potentially add editing saved games to History page
 
 ### Phase 4
 
