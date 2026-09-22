@@ -63,9 +63,8 @@
     }
     const savedGames = response.games
     const savedFrames = []
-    // iterate backwards to list games most-recent-first
-    // update in the future after DB integration to introduce sort filters
-    for (let i = savedGames.length - 1; i >= 0; i--){
+    // backend returns games newest-first now
+    for (let i = 0; i < savedGames.length; i++){
         if (!savedGames[i] || !Array.isArray(savedGames[i].throws) || savedGames[i].throws.length === 0){
             invalidGames.value.push(i)
             continue

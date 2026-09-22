@@ -50,7 +50,9 @@ def retrieve_games(session_id: uuid.UUID) -> GameListResponse:
     """
     with Session(engine) as session:
         try:
-            raw_results = session.execute(select(Game).where(Game.session_id == session_id)).scalars().all()
+            raw_results = session.execute(
+                select(Game).where(Game.session_id == session_id).order_by(Game.date.desc())
+            ).scalars().all()
             converted = [GameRead.model_validate(item) for item in raw_results]
 
         except SQLAlchemyError:
