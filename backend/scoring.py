@@ -1,4 +1,23 @@
 def calculate_score(throws_array):
+    """Calculate the score of the provided throws information.
+
+    Additionally validates the game, both against bowling rules and the score from the client.
+
+    Games must be finished, unfinished games will be rejected.
+
+    Args:
+        throws_array: The list of throws from the completed bowling game.
+
+    Returns:
+        A dict, with the following keys:
+            frames: A list of 10 frame dicts with a valid game. May be None or partially filled
+            when is_valid is false, depending on where the validation failed.
+            is_valid: True if throws_array is a valid, finished game.
+            curr_throw: The throw number that was reached in the current frame.
+            curr_frame: The current frame.
+            pins_left: Pins remaining in the current frame.
+            total: The final score, or None if is_valid is false.
+    """
     throws_iter = 0
     total_pins_this_frame = 0
     current_total = 0
@@ -97,7 +116,7 @@ def calculate_score(throws_array):
                         game_frames[current_frame - 1]["roll_2"] = next_throw
                         game_frames[current_frame - 1]["current_total"] = current_total
                         current_throw += 1
-                        #game is over, break
+                        # game is over, break
                         break
             # optional third throw, if strike or spare have been made in the first two throws
             elif (current_throw == 3):
@@ -137,13 +156,18 @@ def calculate_score(throws_array):
             current_frame += 1
             total_pins_this_frame = 0
         throws_iter += 1
-    # populate and return JSON object
+    # If current_frame is not 10, the game is not over, and is not valid.
+    # If current_throw is less than 3, the game is also not over, and is not valid.
     if (current_frame != 10 or current_throw < 3):
         return_json["is_valid"] = False
+    # If frame 10 ends after the second throw.
     elif (current_frame == 10 and current_throw == 3):
+        # Verify that roll_1 and roll_2 added are not greater than or equal to 10.
         frame_10_sum = game_frames[9]["roll_1"] + game_frames[9]["roll_2"]
+        # If they are, we are missing a bonus throw, and the game is invalid.
         if (frame_10_sum >= 10):
             return_json["is_valid"] = False
+    # populate and return JSON object
     return_json["total"] = current_total
     return_json["curr_throw"] = current_throw
     return_json["curr_frame"] = current_frame
@@ -152,10 +176,33 @@ def calculate_score(throws_array):
     return return_json
 
 def initialize_frames():
+    """Create an empty set of frames for a bowling game.
+
+    Initializes game state fields to None.
+
+    Returns:
+        A list of ten frame dicts, each with:
+            frame: The frame number.
+            roll_1: The first throw of the frame.
+            roll_2: The second throw of the frame.
+            roll_3: The third throw of the frame, only for frame 10.
+            current_total: The total of the game at the end of the frame.
+    """
     frames = [{"frame": x + 1, "roll_1": None, "roll_2": None, "current_total": None} for x in range(9)]
     frames.append({"frame": 10, "roll_1": None, "roll_2": None, "roll_3": None, "current_total": None})
     return frames
 
 def validate_throw(throw_val, pins_val):
+    """Verify that a specific throw is valid.
+    
+    Checks if the throw is an int, is not less than 0, and is not more than the current pin count.
+
+    Args:
+        throw_val: The value of the throw to be validated.
+        pins_val: The current maximum number of possible pins.
+
+    Returns:
+        False if throw is invalid, True if throw is valid.
+    """
     if (type(throw_val) is not int or throw_val < 0 or throw_val > pins_val): return False
     else: return True
