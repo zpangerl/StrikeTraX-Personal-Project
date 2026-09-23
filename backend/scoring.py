@@ -204,5 +204,4 @@ def validate_throw(throw_val, pins_val):
     Returns:
         False if throw is invalid, True if throw is valid.
     """
-    if (type(throw_val) is not int or throw_val < 0 or throw_val > pins_val): return False
-    else: return True
+    return not (type(throw_val) is not int or throw_val < 0 or throw_val > pins_val)
