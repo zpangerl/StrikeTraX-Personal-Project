@@ -1,47 +1,54 @@
 <template>
-    <div class="text-center mt-3 pt-4">
-        <h1 class="display-5"><strong>Game History</strong></h1>
-    </div>
-    <!--Will only appear if no game data is stored in database-->
-    <div class="d-flex justify-content-center" v-if="!hasGameData && !isLoading">
-        <h4 class="display-5">No games to display!</h4>
-    </div>
-    <!--Will only appear if any invalid games exist, giving the user the ability to purge invalid games-->
-    <!--Invalid games in this context mean impossible scores, such as negative numbers, more than 10 pins in a frame, string instead of a number, etc-->
-    <!--With the database, this shouldn't happen, but is technically still possible with devtools-->
-    <div class="d-flex align-items-center flex-column" v-if="invalidGames.length !== 0">
-        <h4 class="display-6">{{ invalidGames.length }} {{ invalidGames.length === 1 ? 'game' : 'games' }} could not be loaded due to invalid data</h4>
-    </div>
-    <!--Will only appear if the save data is corrupted-->
-    <!--With the database this shouldn't happen, but is technically still possible with devtools-->
-    <div class="d-flex align-items-center flex-column" v-if="hasCorruptedData">
-        <h4 class="display-6">Saved game data corrupted, cannot load</h4>
-    </div>
-    <div class="d-flex align-items-center flex-column">
-        <div v-for="(game, i) in gameHistory" :key="i" class="d-flex flex-column align-items-center">
-            <!--Dynamically display each saved game including timestamp-->
-            <h3 class="mt-4 mb-2">Game {{ i + 1 }}: {{ new Date(game.date).toLocaleString() }}</h3>
-            <div class="scorecard d-flex">
-                <div v-for="(frame, j) in game.frames" :key="j" class="frame-wrapper text-center me-2">
-                    <div class="frame-number mb-1">{{ j + 1 }}</div>
-                    <div class="frame-cell">
-                        <div class="roll-boxes">
-                            <div class="roll-box">{{ displayRoll(frame, 1) }}</div>
-                            <div class="roll-box">{{ displayRoll(frame, 2) }}</div>
-                            <!--Only frame 10 will have a roll3 field, need a check-->
-                            <div class="roll-box" v-if="frame.roll3 !== undefined">{{ displayRoll(frame, 3) }}</div>
+    <WaitScreen v-if="isWakingUp"></WaitScreen>
+    <template v-else>
+        <div class="text-center mt-3 pt-4">
+            <h1 class="display-5"><strong>Game History</strong></h1>
+        </div>
+        <!--Will only appear if no game data is stored in database-->
+        <div class="d-flex justify-content-center" v-if="!hasGameData && !isLoading">
+            <h4 class="display-5">No games to display!</h4>
+        </div>
+        <!--Will only appear if any invalid games exist, giving the user the ability to purge invalid games-->
+        <!--Invalid games in this context mean impossible scores, such as negative numbers, more than 10 pins in a frame, string instead of a number, etc-->
+        <!--With the database, this shouldn't happen, but is technically still possible with devtools-->
+        <div class="d-flex align-items-center flex-column" v-if="invalidGames.length !== 0">
+            <h4 class="display-6">{{ invalidGames.length }} {{ invalidGames.length === 1 ? 'game' : 'games' }} could not be loaded due to invalid data</h4>
+        </div>
+        <!--Will only appear if the save data is corrupted-->
+        <!--With the database this shouldn't happen, but is technically still possible with devtools-->
+        <div class="d-flex align-items-center flex-column" v-if="hasCorruptedData">
+            <h4 class="display-6">Saved game data corrupted, cannot load</h4>
+        </div>
+        <div class="d-flex align-items-center flex-column">
+            <div v-for="(game, i) in gameHistory" :key="i" class="d-flex flex-column align-items-center">
+                <!--Dynamically display each saved game including timestamp-->
+                <h3 class="mt-4 mb-2">Game {{ i + 1 }}: {{ new Date(game.date).toLocaleString() }}</h3>
+                <div class="scorecard d-flex">
+                    <div v-for="(frame, j) in game.frames" :key="j" class="frame-wrapper text-center me-2">
+                        <div class="frame-number mb-1">{{ j + 1 }}</div>
+                        <div class="frame-cell">
+                            <div class="roll-boxes">
+                                <div class="roll-box">{{ displayRoll(frame, 1) }}</div>
+                                <div class="roll-box">{{ displayRoll(frame, 2) }}</div>
+                                <!--Only frame 10 will have a roll3 field, need a check-->
+                                <div class="roll-box" v-if="frame.roll3 !== undefined">{{ displayRoll(frame, 3) }}</div>
+                            </div>
+                            <div class="frame-total">{{ frame.currentTotal }}</div>
                         </div>
-                        <div class="frame-total">{{ frame.currentTotal }}</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </template>
 </template>
 
 <script setup>
   import { ref } from 'vue'
+  import { requestWithRetry } from '../utils/requestRetry.js'
   import { displayRoll, calculateScore} from '../utils/scoring.js'
+  import WaitScreen from './Loading.vue'
+  // Pull the ref and function from util file for use in this component.
+  const { isWakingUp, fetchWithRetry } = requestWithRetry()
   const isLoading = ref(true)
   const hasGameData = ref(false)
   const invalidGames = ref([])
@@ -100,7 +107,7 @@
     // attempt to get the games from the database
     let response = null
     try {
-    response = await fetch(`${import.meta.env.VITE_API_URL}/games?session_id=${sessionID}`)
+    response = await fetchWithRetry(`${import.meta.env.VITE_API_URL}/games?session_id=${sessionID}`)
     } catch (error) {
         alert("Could not retrieve games, please try again")
         return null

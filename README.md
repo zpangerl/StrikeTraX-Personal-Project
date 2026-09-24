@@ -2,6 +2,8 @@
 
 StrikeTraX is a bowling score tracking web application that allows for live throw-by-throw updates, saving/loading in progress games, and displaying completed game history.
 
+Please note, because the Azure SQL Database is serverless, it pauses after some time (App Service pauses as well). The first request may take a minute or two while the app and database start up. While waiting, a load screen will be displayed.
+
 ![Home page](src/assets/HomePage.png)
 ![Scoring page](src/assets/LogGame.png)
 ![History page](src/assets/History.png)

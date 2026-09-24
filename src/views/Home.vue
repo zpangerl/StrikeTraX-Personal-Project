@@ -4,3 +4,6 @@
         <p>Keep track of your bowling scores, frame by frame!</p>
     </div>
 </template>
+<script setup>
+    fetch(`${import.meta.env.VITE_API_URL}/health`).catch(() => {})
+</script>
