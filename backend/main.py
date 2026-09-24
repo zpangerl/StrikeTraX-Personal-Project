@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -35,6 +35,26 @@ app.add_middleware(
     allow_headers=["Content-Type"]
 )
 
+@app.get("/health")
+def health_ping() -> bool:
+    """Ping the database to wake a paused Azure SQL instance.
+
+    Returns:
+        True if the database responds successfully.
+
+    Raises:
+        HTTPException: 503 if the database is unreachable.
+    """
+    with Session(engine) as session:
+        try:
+            session.execute(text("SELECT 1"))
+        except SQLAlchemyError:
+            # Database is asleep, raise exception to signal retry.
+            # 503 code to differentiate from generic 500 code.
+            logger.exception("Health check failed, database unreachable")
+            raise HTTPException(status_code=503, detail="Database unreachable")
+        return True
+
 @app.get("/games")
 def retrieve_games(session_id: uuid.UUID) -> GameListResponse:
     """Retrieve the user's games from the database.
@@ -46,7 +66,7 @@ def retrieve_games(session_id: uuid.UUID) -> GameListResponse:
         A GameListResponse containing all games under the user's session ID.
 
     Raises:
-        HTTPException: 500 if database operation fails.
+        HTTPException: 503 if database operation fails.
     """
     with Session(engine) as session:
         try:
@@ -58,8 +78,9 @@ def retrieve_games(session_id: uuid.UUID) -> GameListResponse:
         except SQLAlchemyError:
             # Database error (most likely resuming database)
             # Database isn't on all the time, may have to wait a minute or two before trying again to let it resume.
+            # 503 code to differentiate from generic 500 code.
             logger.exception("Failed to retrieve games from Database")
-            raise HTTPException(status_code=500, detail="Failed to retrieve games, please try again")
+            raise HTTPException(status_code=503, detail="Failed to retrieve games, please try again")
     response = GameListResponse(games=converted)
     return response
 
@@ -77,7 +98,7 @@ def store_game(request: Request, new_game: GameStoreRequest) -> bool:
 
     Raises:
         HTTPException: 422 if game is invalid or recalculated score doesn't match provided total,
-        500 if database operation fails.
+        503 if database operation fails.
     """
     throws = new_game.throws
     total = new_game.total_score
@@ -96,6 +117,7 @@ def store_game(request: Request, new_game: GameStoreRequest) -> bool:
         except SQLAlchemyError:
             # Database error (most likely resuming database)
             # Database isn't on all the time, may have to wait a minute or two before trying again to let it resume.
+            # 503 code to differentiate from generic 500 code.
             logger.exception("Failed to add new game to Database")
-            raise HTTPException(status_code=500, detail="Failed to add game to database, please try again")
+            raise HTTPException(status_code=503, detail="Failed to add game to database, please try again")
     return True

@@ -19,4 +19,5 @@ connection_url = URL.create(
     },
 )
 
-engine = create_engine(connection_url)
+# Azure can drop idle connections, I believe pool_pre_ping helps with that.
+engine = create_engine(connection_url, pool_pre_ping=True)
