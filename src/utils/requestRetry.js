@@ -6,7 +6,7 @@
 import { ref } from 'vue'
 
 /**
- * Used to supply the a ref and a function to both History.vue and Scoring.vue.
+ * Used to supply the a and a function to both History.vue and Scoring.vue.
  * @returns {{ isWakingUp: Ref<boolean>, fetchWithRetry: Function}} - An object with a reactive ref
  * that is true when a request is being retried, and a function similar to fetch that automatically retries
  * when the response is a 503.
@@ -20,7 +20,7 @@ export function requestWithRetry(){
      * Attempts to query the database, retrying for a set period of time if it is unsuccessful.
      * @param {string} url - The complete url to the database, including endpoint.
      * @param {RequestInit} [options] - The request body being sent.
-     * @returns 
+     * @returns {Promise<Response>} The final response, either successful or unsuccessful after time runs out.
      */
     async function fetchWithRetry(url, options) {
         const startTime = Date.now()
