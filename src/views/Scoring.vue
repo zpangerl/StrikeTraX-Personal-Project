@@ -262,6 +262,7 @@
 
   /**
    * Saves a completed game to the Azure SQL database
+   * Will attempt to retry if the request is unsuccessful.
    */  
   async function saveGame(){
     currentlySaving.value = true
@@ -271,14 +272,16 @@
       sessionID = crypto.randomUUID()
       localStorage.setItem('sessionID', sessionID)
     }
-    // actually save the game from here on
     let response = null
     try{
+      // Ping the database until its awake, or until it times out.
       response = await fetchWithRetry(`${import.meta.env.VITE_API_URL}/health`)
+      // If timeout (currently two minutes)
       if(response.status === 503){
         alert("Your game could not be saved, please try again")
         return
       }
+      // If the database is successfully reached, actually save the game.
       response = await fetch(`${import.meta.env.VITE_API_URL}/games`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

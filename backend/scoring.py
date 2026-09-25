@@ -1,3 +1,7 @@
+"""Functions to recalculate bowling scores server-side.
+
+Ported from scoring.js for use with Python files.
+"""
 def calculate_score(throws_array):
     """Calculate the score of the provided throws information.
 

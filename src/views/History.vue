@@ -8,7 +8,7 @@
         <div class="d-flex justify-content-center" v-if="!hasGameData && !isLoading">
             <h4 class="display-5">No games to display!</h4>
         </div>
-        <!--Will only appear if any invalid games exist, giving the user the ability to purge invalid games-->
+        <!--Will only appear if any invalid games exist.-->
         <!--Invalid games in this context mean impossible scores, such as negative numbers, more than 10 pins in a frame, string instead of a number, etc-->
         <!--With the database, this shouldn't happen, but is technically still possible with devtools-->
         <div class="d-flex align-items-center flex-column" v-if="invalidGames.length !== 0">

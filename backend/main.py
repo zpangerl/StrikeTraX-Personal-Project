@@ -49,7 +49,7 @@ def health_ping() -> bool:
         try:
             session.execute(text("SELECT 1"))
         except SQLAlchemyError:
-            # Database is asleep, raise exception to signal retry.
+            # Database is most likely asleep, raise exception to signal retry.
             # 503 code to differentiate from generic 500 code.
             logger.exception("Health check failed, database unreachable")
             raise HTTPException(status_code=503, detail="Database unreachable")

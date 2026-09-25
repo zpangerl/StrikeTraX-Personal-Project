@@ -13,6 +13,7 @@ connection_url = URL.create(
     password=settings.db_password,
     host=settings.db_server,
     database=settings.db_name,
+    # Azure SQL requires encrypted connections.
     query={
         "driver": "ODBC Driver 18 for SQL Server",
         "Encrypt": "yes"
