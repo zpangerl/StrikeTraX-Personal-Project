@@ -3,7 +3,7 @@
 import datetime
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class GameRead(BaseModel):
@@ -19,7 +19,7 @@ class GameRead(BaseModel):
 
 class GameStoreRequest(BaseModel):
     """Request for sending games to database."""
-    throws: list[int]
+    throws: list[int] = Field(max_length=21)
     total_score: int
     session_id: uuid.UUID
 
