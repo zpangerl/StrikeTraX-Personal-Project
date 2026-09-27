@@ -4,3 +4,7 @@
         <p>Keep track of your bowling scores, frame by frame!</p>
     </div>
 </template>
+<script setup>
+    // Ping the database as soon as the home page loads. If the database is paused it will speed up wake time.
+    fetch(`${import.meta.env.VITE_API_URL}/health`).catch(() => {})
+</script>

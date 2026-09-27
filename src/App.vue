@@ -1,5 +1,4 @@
 <!--Navbar and Router View for navigation-->
-<script setup></script>
 
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
@@ -25,5 +24,3 @@
   </nav>
   <router-view />
 </template>
-
-<style scoped></style>

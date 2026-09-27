@@ -16,6 +16,8 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.6",
     "@vitest/coverage-v8": "^4.1.10",
+    "@vue/test-utils": "^2.5.0",
+    "jsdom": "^30.0.1",
     "vite": "^8.0.8",
     "vite-plugin-vue-devtools": "^8.1.1",
     "vitest": "^4.1.10"

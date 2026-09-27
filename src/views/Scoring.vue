@@ -1,50 +1,57 @@
 <template>
-  <div class="text-center mt-3 pt-4">
-    <h1 class="display-5"><strong>Log Game</strong></h1>
-  </div>
-  <div class="d-flex justify-content-center">
-    <div>
-      <p>Frame: {{ currentFrame }}</p>
-      <p>Roll: {{ currentRoll }}</p>
-      <select class="form-select" v-model.number="rollDropdown" v-if="!isEndOfGame">
-        <!--This will display 0 to max current pins - 1-->
-        <option v-for="n in pins" :key="n - 1" :value="n - 1">{{ n - 1 }}</option>
-        <!--Determine whether to display / or X in the final dropdown selection-->
-        <option :value="remainingPins">{{ strikeOrSpare }}</option>
-      </select>
-      <button class="btn btn-primary" @click="handleSubmit" :disabled="rollDropdown === ''" v-if="!isEndOfGame">Submit</button>
+    <WaitScreen v-if="isWakingUp"></WaitScreen>
+  <template v-else>
+    <div class="text-center mt-3 pt-4">
+      <h1 class="display-5"><strong>Log Game</strong></h1>
     </div>
-  </div>
-  <div class="d-flex justify-content-center">
-    <div class="scorecard d-flex">
-      <div v-for="(frame, i) in frames" :key="i" class="frame-wrapper text-center me-2">
-        <div class="frame-number mb-1">{{ i + 1 }}</div>
-        <div class="frame-cell">
-          <div class="roll-boxes">
-            <div class="roll-box">{{ displayRoll(frame, 1) }}</div>
-            <div class="roll-box">{{ displayRoll(frame, 2) }}</div>
-            <div class="roll-box" v-if="frame.roll3 !== undefined">{{ displayRoll(frame, 3) }}</div>
+    <div class="d-flex justify-content-center">
+      <div>
+        <p>Frame: {{ currentFrame }}</p>
+        <p>Roll: {{ currentRoll }}</p>
+        <select class="form-select" v-model.number="rollDropdown" v-if="!isEndOfGame">
+          <!--This will display 0 to max current pins - 1-->
+          <option v-for="n in pins" :key="n - 1" :value="n - 1">{{ n - 1 }}</option>
+          <!--Determine whether to display / or X in the final dropdown selection-->
+          <option :value="remainingPins">{{ strikeOrSpare }}</option>
+        </select>
+        <button class="btn btn-primary" @click="handleSubmit" :disabled="rollDropdown === ''" v-if="!isEndOfGame">Submit</button>
+      </div>
+    </div>
+    <div class="d-flex justify-content-center">
+      <div class="scorecard d-flex">
+        <div v-for="(frame, i) in frames" :key="i" class="frame-wrapper text-center me-2">
+          <div class="frame-number mb-1">{{ i + 1 }}</div>
+          <div class="frame-cell">
+            <div class="roll-boxes">
+              <div class="roll-box">{{ displayRoll(frame, 1) }}</div>
+              <div class="roll-box">{{ displayRoll(frame, 2) }}</div>
+              <div class="roll-box" v-if="frame.roll3 !== undefined">{{ displayRoll(frame, 3) }}</div>
+            </div>
+            <div class="frame-total">{{ frame.currentTotal }}</div>
           </div>
-          <div class="frame-total">{{ frame.currentTotal }}</div>
         </div>
       </div>
     </div>
-  </div>
-  <div class="d-flex justify-content-center">
-    <p class="display-6" v-if="isEndOfGame">Total Score: {{ total }}</p>
-  </div>
-  <div class="d-flex justify-content-center">
-    <button class="btn btn-danger" @click="newGame" v-if="isEndOfGame">Reset Without Saving</button>
-    <button class="btn btn-primary" @click="saveGame" v-if="isEndOfGame">Log Game</button>
-  </div>
+    <div class="d-flex justify-content-center">
+      <p class="display-6" v-if="isEndOfGame">Total Score: {{ total }}</p>
+    </div>
+    <div class="d-flex justify-content-center" v-if="!currentlySaving">
+      <button class="btn btn-danger" @click="newGame" v-if="isEndOfGame">Reset Without Saving</button>
+      <button class="btn btn-primary" @click="saveGame" v-if="isEndOfGame">Log Game</button>
+    </div>
+  </template>
 </template>
 
 <script setup>
   import { ref, computed } from 'vue'
   import { displayRoll, calculateScore, initializeFrames, validateThrow } from '../utils/scoring'
-  import { loadPartialGame, clearPartialGame, loadCompleteGames, saveCompleteGames, savePartialGame } from '../utils/gameStorage'
+  import { loadPartialGame, clearPartialGame, savePartialGame } from '../utils/gameStorage'
+  import { requestWithRetry } from '../utils/requestRetry.js'
+  import WaitScreen from './Loading.vue'
 
   const isEndOfGame = ref(false)
+  const currentlySaving = ref(false)
+  const { isWakingUp, fetchWithRetry } = requestWithRetry()
   const total = ref(0)
   const currentFrame = ref(1)
   const currentRoll = ref(1)
@@ -247,39 +254,65 @@
   }
 
   /**
-   * Saves a completed game to localStorage for display in History
-   * 
-   * Will be repurposed in the future to save to the database
+   * Ensures that the browser alerts the user before they leave, during awaits
    */
-  function saveGame(){
-    let savedGames = null
-    // attempt to read saved games, if it fails, refuse to save
-    try {
-      savedGames = loadCompleteGames()
+  function handleBeforeUnload(event){
+    event.preventDefault()
+  }
+
+  /**
+   * Saves a completed game to the Azure SQL database
+   * Will attempt to retry if the request is unsuccessful.
+   */  
+  async function saveGame(){
+    currentlySaving.value = true
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    let sessionID = localStorage.getItem('sessionID')
+    if (sessionID === null){
+      sessionID = crypto.randomUUID()
+      localStorage.setItem('sessionID', sessionID)
+    }
+    let response = null
+    try{
+      // Ping the database until its awake, or until it times out.
+      response = await fetchWithRetry(`${import.meta.env.VITE_API_URL}/health`)
+      // If timeout (currently two minutes)
+      if(response.status === 503){
+        alert("Your game could not be saved, please try again")
+        return
+      }
+      // If the database is successfully reached, actually save the game.
+      response = await fetch(`${import.meta.env.VITE_API_URL}/games`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          throws: throws,
+          total_score: total.value,
+          session_id: sessionID
+        })
+      })
+      if(response.status === 422){
+        alert("Game contained invalid data, starting new game")
+        newGame()
+      }
+      else if(!response.ok){
+        alert("Your game could not be saved, please try again")
+        return
+      }
+      else{
+        alert("Game was saved!")
+        newGame()
+      }
     } catch (error){
-      alert("Corrupted game data, game could not be saved")
-      newGame()
+      alert("Your game could not be saved, please try again")
       return
     }
-    const currDate = new Date().toISOString()
-    let storeGames = []
-    const newSave = {
-      date: currDate,
-      throws: null
+    finally{
+      currentlySaving.value = false
+      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-    // if there are no saved games yet
-    if (savedGames === null){
-      newSave.throws = throws
-      storeGames.push(newSave)
-      saveCompleteGames(storeGames)
-    }
-    else {
-      newSave.throws = throws
-      savedGames.push(newSave)
-      saveCompleteGames(savedGames)
-    }
-    newGame()
   }
+
 /**
    * Loads a partial game from localStorage and prepares it to be displayed and continued.
    * 
